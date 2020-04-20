@@ -11,7 +11,7 @@ public static class Managements
     public static readonly ResourceManager Resource = ResourceManager.Instance;
     public static readonly USceneManager Scene = USceneManager.Instance;
 
-    public static readonly Config AppConfig = Config.Instance;
+    public static readonly ConfigManager Config = ConfigManager.Instance;
 
     public static T SceneScript<T>() where T : SceneScriptBase
     {

@@ -8,7 +8,7 @@ using UnityEngine;
 namespace UHelper
 {
 
-public class Config : Singleton<Config>
+public class ConfigManager : Singleton<ConfigManager>
 {
     private Dictionary<string,UConfig> configs = new Dictionary<string, UConfig>();
     public void Initialize()

@@ -34,7 +34,7 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
         
 
         // 配置文件
-        Managements.AppConfig.Initialize();
+        Managements.Config.Initialize();
 
         // 1. 初始化配置项
         config = Resources.Load<UHelperConfig>("UHelperConfig");
@@ -53,10 +53,9 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
 
     private void Initialize()
     {
-        AppConfig _config = Managements.AppConfig.Get<AppConfig>();
+        AppConfig _config = Managements.Config.Get<AppConfig>();
 
         Screen.SetResolution(_config.Screen.Width,_config.Screen.Height,_config.Screen.Mode);
-        Debug.LogError(_config.Screen.Mode);
     }
 
     private void OnDestroy() {
