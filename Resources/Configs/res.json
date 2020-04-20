@@ -1,0 +1,15 @@
+{
+    "Persistence":[
+        {
+            "type":"Texture2D",
+            "path":"Textures"
+        }
+    ],
+
+    "SceneEntry":[
+        {
+            "type":"GameObject",
+            "path":"Prefabs/UI/SceneEntry"
+        }
+    ]
+}

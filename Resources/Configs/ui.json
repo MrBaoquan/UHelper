@@ -1,0 +1,14 @@
+﻿{
+    
+    "SceneEntry":{
+        "LoginUI":{"asset":"LoginUI","type":"Normal","script":"LoginUI"}
+    },
+    
+    "SceneHall":{
+        "HallUI":{}
+    },
+
+    "SceneGame":{
+        "GameUI":{}
+    }
+}
