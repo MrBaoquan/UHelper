@@ -40,7 +40,7 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
         config = Resources.Load<UHelperConfig>("UHelperConfig");
         
         // 2. 初始化资源管理类
-        ResourceManager.Instance.Initialzie();
+        ResourceManager.Instance.Initialize();
 
         // 3. 初始化 UI管理类
         UIManager.Instance.Initialize();
@@ -55,7 +55,12 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
     {
         AppConfig _config = Managements.Config.Get<AppConfig>();
 
-        Screen.SetResolution(_config.Screen.Width,_config.Screen.Height,_config.Screen.Mode);
+        if(_config.Screen.Mode==UFullScreenMode.MinimizedWindow){
+            WinAPI.ShowWindow(WindowType.SW_SHOWMINIMIZED);
+        }else{
+            Screen.SetResolution(_config.Screen.Width,_config.Screen.Height,(FullScreenMode)_config.Screen.Mode);
+        }
+        
     }
 
     private void OnDestroy() {

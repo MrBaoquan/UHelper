@@ -17,14 +17,13 @@ public enum UIType
     Popup
 }
 
-public class UIManager : Singleton<UIManager>
+public class UIManager : Singleton<UIManager>,Manageable
 {
     private Transform UIRoot = null;
 
     private Transform NormalUIRoot = null;
     private Transform StandaloneUIRoot = null;
     private Transform PopupUIRoot = null;
-    
 
     private class UIConfig
     {

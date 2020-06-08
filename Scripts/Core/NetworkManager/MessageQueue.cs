@@ -6,7 +6,7 @@ using Google.Protobuf;
 namespace UHelper
 {
 
-class MessageQueeue
+public class MessageQueeue
 {
     public class Message
     {

@@ -10,9 +10,10 @@ namespace UHelper
         public int Height = Screen.height;
 
         [XmlAttribute()]
-        public FullScreenMode Mode = FullScreenMode.ExclusiveFullScreen;
+        public UFullScreenMode Mode = UFullScreenMode.ExclusiveFullScreen;
 
     }
+
     public class AppConfig : UConfig
     {
         public ScreenConfig Screen = new ScreenConfig();

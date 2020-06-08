@@ -13,11 +13,11 @@ public struct ResourceItem
     public string path;
 }
 
-public class ResourceManager : Singleton<ResourceManager>
+public class ResourceManager : Singleton<ResourceManager>,Manageable
 {
     private Dictionary<string,List<ResourceItem>> rawConfigData;
     private Dictionary<string,Dictionary<string,UnityEngine.Object>> resources;
-    public void Initialzie()
+    public void Initialize()
     {
         this.ReadConfigData();
         resources = new Dictionary<string, Dictionary<string, UnityEngine.Object>>();
