@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,6 +17,18 @@ public static class MonobehaviourExtension
         }
 
         return _target.GetComponent<T>();
+    }
+
+    public static bool Contain<T>(this MonoBehaviour _behaviour, T _component) where T :Behaviour
+    {
+        Component _out_component;
+        return _behaviour.TryGetComponent(_component.GetType(),out _out_component);
+    }
+
+    public static bool Contain(this Transform _transform, Type _type)
+    {
+        Component _out_component;
+        return _transform.TryGetComponent(_type, out _out_component);
     }
 }
 
