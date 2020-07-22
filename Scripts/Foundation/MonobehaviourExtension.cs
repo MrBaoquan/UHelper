@@ -10,13 +10,17 @@ public static class MonobehaviourExtension
 {
     public static T Get<T>(this MonoBehaviour _behaviour,string InPath) where T : Behaviour
     {
+        Transform _target = Get(_behaviour,InPath);
+        return _target.GetComponent<T>();
+    }
+
+    public static Transform Get(this MonoBehaviour _behaviour, string InPath){
         Transform _target = _behaviour.transform.Find(InPath);
         if(_target==null){
             Debug.LogWarningFormat("Can not find gameobjet with path: {0}",InPath);
             return null;
         }
-
-        return _target.GetComponent<T>();
+        return _target;
     }
 
     public static bool Contain<T>(this MonoBehaviour _behaviour, T _component) where T :Behaviour
@@ -29,6 +33,13 @@ public static class MonobehaviourExtension
     {
         Component _out_component;
         return _transform.TryGetComponent(_type, out _out_component);
+    }
+
+    public static void SetChildrenActive(this GameObject _self, bool bActive=true){
+     
+        for(int _index=0; _index<_self.transform.childCount;++_index){
+            _self.transform.GetChild(_index).gameObject.SetActive(bActive);
+        }
     }
 }
 

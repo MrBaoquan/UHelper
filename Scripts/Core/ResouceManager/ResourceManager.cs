@@ -128,7 +128,7 @@ public class ResourceManager : Singleton<ResourceManager>,Manageable
             UnityEngine.Object[] _resources = Resources.LoadAll(_item.path,_T);
             foreach(var _resource in _resources)
             {
-                Debug.LogFormat("{0} Add resource {1}",InKey,_resource.name);
+                //Debug.LogFormat("{0} Add resource {1}",InKey,_resource.name);
                 resources[InKey].Add(_resource.name,_resource);
             }
         }

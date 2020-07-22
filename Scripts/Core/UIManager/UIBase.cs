@@ -17,6 +17,10 @@ public abstract class UIBase : MonoBehaviour
             uiType = value;
         }
     }
+
+    public bool isShowing{
+        get {return this.gameObject.activeInHierarchy;}
+    }
     public virtual void OnSpawned()
     {
      

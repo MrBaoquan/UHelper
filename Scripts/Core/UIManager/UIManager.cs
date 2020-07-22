@@ -309,7 +309,7 @@ public class UIManager : Singleton<UIManager>,Manageable
         standaloneUIs.Remove(InKey);
 
         var _last = standaloneUIs.LastOrDefault();
-        if(!_last.Equals(default)){
+        if(!_last.Equals(default(KeyValuePair<string,UIBase>))){
             _last.Value.Show();
         }
     }

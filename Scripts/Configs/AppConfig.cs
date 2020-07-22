@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 namespace UHelper
@@ -9,6 +10,9 @@ namespace UHelper
         [XmlAttribute()]
         public int Height = Screen.height;
 
+        [XmlAttribute]
+        public int RefreshRate = 30;
+
         [XmlAttribute()]
         public UFullScreenMode Mode = UFullScreenMode.ExclusiveFullScreen;
 
@@ -17,5 +21,9 @@ namespace UHelper
     public class AppConfig : UConfig
     {
         public ScreenConfig Screen = new ScreenConfig();
+
+        [XmlArray("Displays")]
+        [XmlArrayItem("Display")]
+        public List<ScreenConfig> Displays = new List<ScreenConfig>();
     }
 }

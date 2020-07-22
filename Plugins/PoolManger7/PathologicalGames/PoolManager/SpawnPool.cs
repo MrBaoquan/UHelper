@@ -1060,7 +1060,7 @@ namespace PathologicalGames
             // Wait for the delay time to complete
             // Waiting the extra frame seems to be more stable and means at least one 
             //  frame will always pass
-            yield return new WaitForSeconds(emitter.startDelay + 0.25f);
+			yield return new WaitForSeconds(emitter.main.startDelay.constantMax + 0.25f);
 
             // Do nothing until all particles die or the safecount hits a max value
             float safetimer = 0;   // Just in case! See Spawn() for more info
