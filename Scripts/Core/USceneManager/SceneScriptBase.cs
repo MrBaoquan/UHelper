@@ -27,6 +27,7 @@ public abstract class SceneScriptBase
     /// called when application quit
     /// </summary>
     public virtual void OnApplicationQuit(){}
+
 }
 
 }

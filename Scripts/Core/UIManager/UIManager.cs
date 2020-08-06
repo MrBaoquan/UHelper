@@ -136,7 +136,7 @@ public class UIManager : Singleton<UIManager>,Manageable
         return _uiComponent as T;
     }
 
-    public T GetUI<T>(string InKey="") where T : UIBase
+    public T GetUI<T>(string InKey) where T : UIBase
     {
         if(InKey == ""){
             InKey = typeof(T).Name;
@@ -145,6 +145,18 @@ public class UIManager : Singleton<UIManager>,Manageable
         if(!allSpawnedUICaches.TryGetValue(InKey,out _uiComponent)){
             return null;
         }
+        return _uiComponent as T;
+    }
+
+    public T GetUI<T>(Action<T> InHandler=null) where T : UIBase
+    {
+        
+        string InKey = typeof(T).Name;
+        UIBase _uiComponent = null;
+        if(!allSpawnedUICaches.TryGetValue(InKey,out _uiComponent)){
+            return null;
+        }
+        if(InHandler!=null) InHandler(_uiComponent as T);
         return _uiComponent as T;
     }
 
@@ -231,7 +243,7 @@ public class UIManager : Singleton<UIManager>,Manageable
             _uiComponent = _newUI.AddComponent(_T) as UIBase;
         }
         _uiComponent.Type = InUIConfig.Type;
-        _uiComponent.OnSpawned();
+        _uiComponent.OnLoad();
         _newUI.transform.SetParent(getParentUIAttachTo(_uiComponent.Type));
         allSpawnedUICaches.Add(InUIKey,_uiComponent);
     }
