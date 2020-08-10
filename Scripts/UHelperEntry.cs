@@ -57,12 +57,12 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
         
         activeAllDisplays();
 
-        // if(_config.Screen.Mode==UFullScreenMode.MinimizedWindow){
-        //     WinAPI.ShowWindow(WindowType.SW_SHOWMINIMIZED);
-        // }else{
+        if(_config.Screen.Mode==UFullScreenMode.MinimizedWindow){
+            WinAPI.ShowWindow(WindowType.SW_SHOWMINIMIZED);
+        }else{
             
-        //     Screen.SetResolution(_config.Screen.Width,_config.Screen.Height,(FullScreenMode)_config.Screen.Mode);
-        // }
+            Screen.SetResolution(_config.Screen.Width,_config.Screen.Height,(FullScreenMode)_config.Screen.Mode);
+        }
         Debug.LogFormat("set full screen mode:{0}, width:{1}, height:{2}",_config.Screen.Mode,_config.Screen.Width,_config.Screen.Height);
     }
 
@@ -78,7 +78,7 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
         for(int _index=0;_index<Display.displays.Length;++_index){
             if(_index>=_config.Displays.Count) break;
             var _screenConfig = _config.Displays[_index];
-            Display.displays[_index].Activate();
+            Display.displays[_index].Activate(_screenConfig.Width,_screenConfig.Height,_screenConfig.RefreshRate);
             Debug.LogFormat("Display {0}",_index);
         }
 

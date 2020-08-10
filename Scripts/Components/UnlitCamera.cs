@@ -7,6 +7,9 @@ public class UnlitCamera : MonoBehaviour
     float shadowDistance = 0.0f;
     public Light[] SoftLights;
      public Light[] HardLights;
+
+
+
     // Start is called before the first frame update
     void Start()
     {

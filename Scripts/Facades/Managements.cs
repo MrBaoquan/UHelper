@@ -12,6 +12,8 @@ public static class Managements
     public static readonly ResourceManager Resource = ResourceManager.Instance;
     public static readonly USceneManager Scene = USceneManager.Instance;
     public static readonly UNetManager Network = UNetManager.Instance;
+
+    public static readonly UAudioManager Audio = UAudioManager.Instance;
     
 
     public static T SceneScript<T>() where T : SceneScriptBase

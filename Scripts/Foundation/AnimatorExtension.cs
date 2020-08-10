@@ -1,14 +1,37 @@
+using System.Linq;
 using System;
 using UnityEngine;
+
+using UniRx;
 
 namespace UHelper
 {
 
 public static class AnimatorExtension
 {
-    public static void PlayAnimation(this Animator animator, string InState){
+    
+    public static AnimationClip GetClip(this Animator animator, string InName){
+        var _animClips = animator.runtimeAnimatorController.animationClips;
+         return _animClips.Where(_=>{
+            return _.name==InName;
+         }).FirstOrDefault();
+    }
+
+    public static void PlayAnimation(this Animator animator, string InState, Action<Animator> InCallback=null){
         animator.Play(InState);
         syncPlayState(animator);
+
+        if(InCallback is null) return;
+        
+        Observable.NextFrame().Subscribe(_=>{
+            float _duration = animator.GetCurrentAnimatorStateInfo(0).length + 0.1f;
+
+            Observable.Interval(TimeSpan.FromSeconds(_duration))
+                .First()
+                .Subscribe(_1=>{
+                    if(InCallback!=null) InCallback(animator);
+                });
+        });
     }
 
     public static void StopAnimation(this Animator animator){
@@ -23,7 +46,6 @@ public static class AnimatorExtension
     private static void syncStopState(Animator animator){
         animator.SetBool("Stop",true);
     }
-
 }
 
 }
