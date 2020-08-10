@@ -243,6 +243,11 @@ public class UVideoPlayer : MonoBehaviour
         videoPlayer.playbackSpeed = InSpeed;
     }
 
+    public void Render2Texture(RenderTexture InTexture)
+    {
+        videoPlayer.targetTexture = InTexture;
+    }
+
     private void Reset() {
         RectTransform _transform = this.transform as RectTransform;
         _transform.anchorMin = Vector2.zero;
