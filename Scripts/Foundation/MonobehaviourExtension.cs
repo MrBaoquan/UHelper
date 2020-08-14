@@ -17,7 +17,7 @@ public static class MonobehaviourExtension
     public static Transform Get(this MonoBehaviour _behaviour, string InPath){
         Transform _target = _behaviour.transform.Find(InPath);
         if(_target==null){
-            Debug.LogWarningFormat("Can not find gameobjet with path: {0}",InPath);
+            //Debug.LogWarningFormat("Can not find gameobjet with path: {0}",InPath);
             return null;
         }
         return _target;
@@ -40,6 +40,20 @@ public static class MonobehaviourExtension
         for(int _index=0; _index<_self.transform.childCount;++_index){
             _self.transform.GetChild(_index).gameObject.SetActive(bActive);
         }
+    }
+
+    public static bool IsChildrenActive(this GameObject _self, int Index=-1){
+        if(Index==-1){
+            for(int _index=0; _index<_self.transform.childCount;++_index){
+                if(!_self.transform.GetChild(_index).gameObject.activeInHierarchy){
+                    return false;
+                }
+            }
+        }
+        if(Index >= _self.transform.childCount){
+            return false;
+        }
+        return _self.transform.GetChild(Index).gameObject.activeInHierarchy;
     }
 }
 
