@@ -21,6 +21,15 @@ public static class UConverter
         return _instance;
     }
 
+    public static void BGR2RGB(ref byte[] buffer) {
+        byte swap;
+        for (int i = 0; i < buffer.Length; i = i + 3) {
+            swap = buffer[i];
+            buffer[i] = buffer[i + 2];
+            buffer[i + 2] = swap;
+        }
+    }
+
 }
 
 }

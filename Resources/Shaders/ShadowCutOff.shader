@@ -1,4 +1,10 @@
-﻿Shader "UHelper/ShadowCutOff"
+﻿/*
+ *
+ *  针对对AlphaMask 进行像素裁剪
+ *
+ */
+
+Shader "UHelper/ShadowCutOff"
 {
     Properties
     {
@@ -59,7 +65,7 @@
                 return o;
             }
 
-            
+
 
             fixed4 frag (v2f i) : SV_Target
             {
@@ -74,7 +80,7 @@
                 // darken light's illumination with shadow, keep ambient intact
                 fixed3 lighting = i.diff * shadow + i.ambient;
                 //fixed3 lighting = fixed3(1,1,1);
-                
+
                 col.rgb *= lighting;
                 return col;
             }
@@ -97,7 +103,7 @@
             float _Threshold;
             float _Compare;
 
-            struct v2f { 
+            struct v2f {
                 float2 uv : TEXCOORD0;
                 V2F_SHADOW_CASTER;
             };

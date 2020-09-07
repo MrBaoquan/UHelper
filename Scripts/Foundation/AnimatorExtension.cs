@@ -22,7 +22,6 @@ public static class AnimatorExtension
         syncPlayState(animator);
 
         if(InCallback is null) return;
-        
         Observable.NextFrame().Subscribe(_=>{
             float _duration = animator.GetCurrentAnimatorStateInfo(0).length + 0.1f;
 
@@ -32,6 +31,10 @@ public static class AnimatorExtension
                     if(InCallback!=null) InCallback(animator);
                 });
         });
+    }
+
+    public static bool IsState(this Animator animator, string InState, int InLayer = 0){
+        return animator.GetCurrentAnimatorStateInfo(InLayer).IsName(InState);
     }
 
     public static void StopAnimation(this Animator animator){

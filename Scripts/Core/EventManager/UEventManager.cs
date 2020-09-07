@@ -1,4 +1,5 @@
-﻿using System.Net.Mime;
+﻿using System.Linq;
+using System.Net.Mime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -29,7 +30,7 @@ public class UEventManager : Singleton<UEventManager>,Manageable
             return;
         }
         Action<UEvent> _newDelegate = _event=>InDelegate(_event as T);
-        lookup.Add(_newDelegate,_newDelegate);
+        lookup.Add(InDelegate,_newDelegate);
 
         Type _actionKey = typeof(T);
         Action<UEvent> _delegate;
@@ -56,8 +57,20 @@ public class UEventManager : Singleton<UEventManager>,Manageable
                 }
             }
             lookup.Remove(InDelegate);
+        }   
+    }
+
+    public void Unregister<T>() where T : UEvent
+    {
+        Action<UEvent> _delegate;
+        Type _actionKey = typeof(T);
+        if(delegates.TryGetValue(_actionKey,out _delegate)){
+            delegates.Remove(_actionKey);
+            var _delegates = _delegate.GetInvocationList();
+            _delegates.ToList().ForEach(_=>{
+                lookup.Remove(_);
+            });
         }
-        
     }
 
     public void Fire(UEvent InEvent)

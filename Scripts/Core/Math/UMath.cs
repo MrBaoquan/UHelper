@@ -23,6 +23,7 @@ public static class UMath
         return new Vector2(_x,_y);
     }
 
+    // 
     public static float ScaleValue(float Input, float Basic, float Scale)
     {
         if(Basic==0){
