@@ -8,7 +8,7 @@ namespace UHelper
 {
 public static class MonobehaviourExtension
 {
-    public static T Get<T>(this MonoBehaviour _behaviour,string InPath) where T : Behaviour
+    public static T Get<T>(this MonoBehaviour _behaviour,string InPath) where T : Component
     {
         Transform _target = Get(_behaviour,InPath);
         return _target.GetComponent<T>();
@@ -23,7 +23,7 @@ public static class MonobehaviourExtension
         return _target;
     }
 
-    public static bool Contain<T>(this MonoBehaviour _behaviour, T _component) where T :Behaviour
+    public static bool Contain<T>(this MonoBehaviour _behaviour, T _component) where T : Component
     {
         Component _out_component;
         return _behaviour.TryGetComponent(_component.GetType(),out _out_component);
@@ -91,13 +91,18 @@ public static class MonobehaviourExtension
     }
 
 
+
     // 获取子元素
-    public static List<GameObject> GetChildren(this GameObject _self, bool bOnlyEnabled=true){
-        List<GameObject> _children = new List<GameObject>();
+    public static List<Transform> Children(this GameObject _self, bool bOnlyEnabled=true){
+        List<Transform> _children = new List<Transform>();
         for(int _index=0; _index<_self.transform.childCount;++_index){
-            if(_self.transform.GetChild(_index).gameObject.activeInHierarchy){
-                _children.Add(_self.transform.GetChild(_index).gameObject);
-            }
+            if(bOnlyEnabled){
+                if(_self.transform.GetChild(_index).gameObject.activeInHierarchy){
+                    _children.Add(_self.transform.GetChild(_index));
+                }
+            }else{
+                _children.Add(_self.transform.GetChild(_index));
+            }   
         }
         return _children;
     }

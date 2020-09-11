@@ -6,9 +6,11 @@ using UnityEngine.Video;
 using UnityEngine.UI;
 using UniRx;
 
-[RequireComponent(typeof(VideoPlayer),typeof(RawImage))]
+
+[RequireComponent(typeof(VideoPlayer))]
 public class UVideoPlayer : MonoBehaviour
 {
+    public VideoRenderMode renderMode = VideoRenderMode.RenderTexture;
     public bool Looping
     {
         set{
@@ -56,18 +58,49 @@ public class UVideoPlayer : MonoBehaviour
     private RectTransform rectTransform = null;
     private VideoPlayer videoPlayer = null;
     private RawImage videoImage = null;
+
+    public void Render2Texture(RenderTexture InTexture = null)
+    {
+        videoPlayer.renderMode = VideoRenderMode.RenderTexture;
+        if(InTexture == null){
+            var _renderer = this.GetComponent<RawImage>();
+            if(_renderer==null){
+                Debug.Log("There is no renderer component. from Render2Texture");
+                return;
+            }
+
+            rectTransform = this.transform as RectTransform;
+            if(rectTransform!=null){
+                RenderTexture _videoRT = new RenderTexture((int)rectTransform.rect.width,(int)rectTransform.rect.height,0,RenderTextureFormat.ARGB32);
+                videoPlayer.targetTexture = _videoRT;
+                _renderer.texture = _videoRT;
+                return;
+            }
+        }
+        videoPlayer.targetTexture = InTexture;
+    }
+
+    public void Render2Material(Renderer InRenderer=null){
+        videoPlayer.renderMode = VideoRenderMode.MaterialOverride;
+        if(InRenderer==null){
+            InRenderer = this.GetComponent<Renderer>();
+            if(InRenderer==null){
+                Debug.LogWarning("There is no renderer component. from Render2Material");
+                return;
+            }
+        }
+        videoPlayer.targetMaterialRenderer = InRenderer;
+    }
+
     private void Awake() {
-        rectTransform = this.transform as RectTransform;
-        RenderTexture _videoRT = new RenderTexture((int)rectTransform.rect.width,(int)rectTransform.rect.height,0,RenderTextureFormat.ARGB32);
-        
-        videoPlayer = this.GetComponent<VideoPlayer>();
+        buildRefs();
         videoPlayer.playOnAwake = false;
         videoPlayer.isLooping = false;
-        videoPlayer.renderMode = VideoRenderMode.RenderTexture;
-        videoPlayer.targetTexture = _videoRT;
+    }
 
-        videoImage = this.GetComponent<RawImage>();
-        videoImage.texture = _videoRT;
+    void buildRefs(){
+        if(videoPlayer==null)
+            videoPlayer = this.GetComponent<VideoPlayer>();
     }
 
     private VideoPlayer.EventHandler vpReachEnd = null;
@@ -79,8 +112,19 @@ public class UVideoPlayer : MonoBehaviour
     public void PlayByUrl(string InUrl, VideoPlayer.EventHandler OnReachEndHandler=null, int loop=-1, float StartTime=0, float InEndTime=0)
     {
         videoPlayer.url = InUrl;
-        this.Play(OnReachEndHandler,loop,StartTime,InEndTime);
-        
+        this.Play(OnReachEndHandler,loop,StartTime,InEndTime);   
+    }
+
+    public void Play(VideoClip InClip, VideoPlayer.EventHandler OnReachEndHandler=null, int loop=-1, float StartTime=0, float InEndTime=0){
+        videoPlayer.clip = InClip;
+        Play(OnReachEndHandler,loop,StartTime,InEndTime);
+    }
+
+    public void Prepare(VideoClip InClip, VideoPlayer.EventHandler OnPrepared=null){
+        videoPlayer.clip = InClip;
+        this.Prepare(_=>{
+            this.SeekTo(0f,OnPrepared);
+        });
     }
 
     public void Play(VideoPlayer.EventHandler OnReachEndHandler=null, int loop=-1, float StartTime=0, float InEndTime=0)
@@ -181,7 +225,8 @@ public class UVideoPlayer : MonoBehaviour
         }
 
         vpPreapared = _=>{
-            OnPrepared(videoPlayer);
+            if(OnPrepared!=null)
+                OnPrepared(videoPlayer);
             videoPlayer.prepareCompleted-=vpPreapared;
         };
         videoPlayer.prepareCompleted += vpPreapared;
@@ -209,7 +254,8 @@ public class UVideoPlayer : MonoBehaviour
                 Debug.Log("seek completed "+ videoPlayer.time);
                 videoPlayer.SetDirectAudioMute(0, false);
                 videoPlayer.Pause();
-                InSeekedHandler(videoPlayer);
+                if(InSeekedHandler != null)
+                    InSeekedHandler(videoPlayer);
                 vpSeekTimer.Dispose();
                 vpSeekTimer = null;    
             });
@@ -221,6 +267,14 @@ public class UVideoPlayer : MonoBehaviour
         if(!videoPlayer.isPlaying){
             videoPlayer.Play();
         }
+    }
+
+    public void Play()
+    {
+        if(videoPlayer!=null){
+            videoPlayer.Play();
+        }
+
     }
 
     public void Stop()
@@ -243,19 +297,6 @@ public class UVideoPlayer : MonoBehaviour
         videoPlayer.playbackSpeed = InSpeed;
     }
 
-    public void Render2Texture(RenderTexture InTexture)
-    {
-        videoPlayer.targetTexture = InTexture;
-    }
-
-    private void Reset() {
-        RectTransform _transform = this.transform as RectTransform;
-        _transform.anchorMin = Vector2.zero;
-        _transform.anchorMax = Vector2.one;
-        _transform.offsetMin = Vector2.zero;
-        _transform.offsetMax = Vector2.zero;
-    }
-
     // Start is called before the first frame update
     void Start()
     {
@@ -267,4 +308,29 @@ public class UVideoPlayer : MonoBehaviour
     {
         
     }
+
+
+    private void Reset() {
+        if(videoImage is null) return;
+        RectTransform _transform = this.transform as RectTransform;
+        _transform.anchorMin = Vector2.zero;
+        _transform.anchorMax = Vector2.one;
+        _transform.offsetMin = Vector2.zero;
+        _transform.offsetMax = Vector2.zero;
+    }
+
+    private void OnValidate() {
+        buildRefs();
+        syncRenderMode();
+    }
+
+    private void syncRenderMode(){
+        if(renderMode == VideoRenderMode.MaterialOverride){
+            Render2Material();
+        }else if(renderMode == VideoRenderMode.RenderTexture){
+            Render2Texture();
+        }
+    }
+
+
 }

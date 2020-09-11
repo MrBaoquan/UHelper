@@ -47,7 +47,7 @@
             {
                 fixed4 _colorA = tex2D(_ATexture,i.uv);
                 fixed4 _colorB = tex2D(_BTexture,i.uv);
-                fixed4 _final = _colorA*_Weight+_colorB*(1-_Weight);
+                fixed4 _final = _colorA*(1-_Weight)+_colorB*_Weight;
                 return _final;
             }
 

@@ -14,7 +14,7 @@ public static class Managements
     public static readonly UNetManager Network = UNetManager.Instance;
     public static readonly UAudioManager Audio = UAudioManager.Instance;
     public static readonly UEventManager Event = UEventManager.Instance;
-    
+    public static readonly UTimerManager Timer = UTimerManager.Instance;
 
     public static T SceneScript<T>() where T : SceneScriptBase
     {

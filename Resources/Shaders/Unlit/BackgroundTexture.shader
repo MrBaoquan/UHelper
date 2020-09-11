@@ -2,8 +2,8 @@
 {
     Properties
     {
-        _MainTex ("Texture2", 2D) = "white" {}
-        [Toggle(FLIP_VERTICAL)] _FLIP_VERTICAL("Flip Vertical", Float) = 1
+        _MainTex ("Main Texture", 2D) = "white" {}
+        [Toggle(FLIP_VERTICAL)] _FLIP_VERTICAL("Flip Vertical", Float) = 0
         [Toggle(FLIP_HORIZONTAL)] _FLIP_HORIZONTAL("Flip Horizontal", Float) = 0
     }
     SubShader
@@ -15,10 +15,12 @@
         {
             ZWrite Off
             ZTest Always
+            Cull Off
  
             CGPROGRAM
             #pragma shader_feature FLIP_VERTICAL
             #pragma shader_feature FLIP_HORIZONTAL
+            #pragma shader_feature DOUBLE_SIDE
  
             #pragma vertex vert
             #pragma fragment frag

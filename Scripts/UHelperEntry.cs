@@ -48,6 +48,9 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
         // 4. 初始化场景管理类
         USceneManager.Instance.Initialize();
 
+        // 5. 初始化Timer管理类
+        UTimerManager.Instance.Initialize();
+
         this.Initialize();
     }
 
