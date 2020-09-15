@@ -72,6 +72,7 @@ public class UVideoPlayer : MonoBehaviour
             rectTransform = this.transform as RectTransform;
             if(rectTransform!=null){
                 RenderTexture _videoRT = new RenderTexture((int)rectTransform.rect.width,(int)rectTransform.rect.height,0,RenderTextureFormat.ARGB32);
+                Debug.Log(rectTransform.rect);
                 videoPlayer.targetTexture = _videoRT;
                 _renderer.texture = _videoRT;
                 return;
@@ -96,6 +97,8 @@ public class UVideoPlayer : MonoBehaviour
         buildRefs();
         videoPlayer.playOnAwake = false;
         videoPlayer.isLooping = false;
+
+        syncRenderMode();
     }
 
     void buildRefs(){
