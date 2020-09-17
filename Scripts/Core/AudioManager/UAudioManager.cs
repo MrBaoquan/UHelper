@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using UniRx;
 namespace UHelper
 {
 
@@ -22,15 +24,21 @@ public class UAudioManager : SingletonBehaviour<UAudioManager>
         PlayMusic(_clip,InVolume);
     }
 
-    public void PlayEffect(AudioClip InEffect)
+    public void PlayEffect(AudioClip InEffect, Action<AudioClip> InCallback=null)
     {
         effectAudioSource.PlayOneShot(InEffect);
+        Debug.Log(InEffect.length);
+        Observable.Interval(TimeSpan.FromSeconds(InEffect.length+0.1f))
+                .First()
+                .Subscribe(_1=>{
+                    if(InCallback!=null) InCallback(InEffect);
+                });
     }
 
-    public void PlayEffect(string InEffect)
+    public void PlayEffect(string InEffect, Action<AudioClip> InCallback=null)
     {
         AudioClip _clip = Managements.Resource.GetRes<AudioClip>(InEffect);
-        effectAudioSource.PlayOneShot(_clip);
+        PlayEffect(_clip,InCallback);
     }
 
 

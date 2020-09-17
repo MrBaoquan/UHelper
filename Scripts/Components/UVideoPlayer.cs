@@ -95,9 +95,6 @@ public class UVideoPlayer : MonoBehaviour
 
     private void Awake() {
         buildRefs();
-        videoPlayer.playOnAwake = false;
-        videoPlayer.isLooping = false;
-
         syncRenderMode();
     }
 
