@@ -184,6 +184,15 @@ public class UIManager : Singleton<UIManager>,Manageable
 
     }
 
+    // 对话框类
+
+    public void ShowDialog(string InContent, Action<DialogUI> onConfirm=null){
+        ShowUI<DialogUI>(InUI=>{
+            InUI.SetCallback(onConfirm);
+            InUI.SetContent(InContent);
+        });
+    }
+
     public void UnInitialize()
     {
         
