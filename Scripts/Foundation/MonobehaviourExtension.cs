@@ -46,6 +46,11 @@ public static class MonobehaviourExtension
         }
     }
 
+    public static GameObject Child(this GameObject _self, string InName){
+        var _child = _self.transform.Find(InName);
+        return _child?_child.gameObject:null;
+    }
+
     public static void SetChildrenActive(this GameObject _self, bool bActive, int StartIndex, int EndIndex=0, bool bRevertOther=false){
      
         int _endIndex = EndIndex==0?_self.transform.childCount:EndIndex<0?_self.transform.childCount+EndIndex:EndIndex;

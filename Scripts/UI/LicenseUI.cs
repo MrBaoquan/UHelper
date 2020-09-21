@@ -20,9 +20,7 @@ public class LicenseUI : UIBase
         {
             var _local_license_key = PlayerPrefs.GetString(encrypter_key,"unset");
             var _cpuid_a = fetchMachineInfo().CPU_ID;
-            var _cpuid_b = Encrypter.Decrypt(_local_license_key);
-            Debug.LogFormat("license:A[{0}],B[{1}]", _cpuid_b, _cpuid_b);
-            Debug.Log(_cpuid_a==_cpuid_b);
+            var _cpuid_b = "";//Encrypter.Decrypt(_local_license_key);
             return _cpuid_b==_cpuid_a;
         }
         catch (System.Exception)
@@ -68,7 +66,7 @@ public class LicenseUI : UIBase
             try
             {
                 var _cpuid = fetchMachineInfo().CPU_ID;
-                string _input_key = Encrypter.Decrypt(licenseContent.Value);
+                string _input_key = "";//Encrypter.Decrypt(licenseContent.Value);
                 if(_input_key==_cpuid){
                     Managements.UI.ShowDialog("序列号有效, 软件已成功激活!",_=>{
                         PlayerPrefs.SetString(encrypter_key,licenseContent.Value);
