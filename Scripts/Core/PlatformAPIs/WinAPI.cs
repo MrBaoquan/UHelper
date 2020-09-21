@@ -1,3 +1,6 @@
+using System.Text.RegularExpressions;
+using System.IO;
+using System.Text;
 using System;  
 using System.Collections;  
 using System.Collections.Generic;  
@@ -48,6 +51,28 @@ public class WinAPI : Singleton<WinAPI>
     public static bool ShowWindow(WindowType InWindowType)  
     {
         return ShowWindow(GetForegroundWindow(), (int)InWindowType);  
+    }
+
+    public static string CALLCMD(string InParameter)
+    {
+        System.Diagnostics.Process _process = new System.Diagnostics.Process();
+        System.Diagnostics.ProcessStartInfo _startInfo = new System.Diagnostics.ProcessStartInfo();
+        
+        _startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+        _startInfo.FileName = "cmd.exe";
+        _startInfo.Arguments = InParameter;
+        _startInfo.CreateNoWindow = true;
+        _startInfo.UseShellExecute = false;
+        _startInfo.StandardOutputEncoding = Encoding.Default;
+        _startInfo.RedirectStandardOutput = true;
+        _process.StartInfo = _startInfo;
+        _process.Start();
+        using (StreamReader _reader = _process.StandardOutput)
+        {
+            StreamReader s = _process.StandardOutput;
+            _process.WaitForExit();
+            return s.ReadToEnd().Trim();
+        }
     }
 }
 

@@ -31,8 +31,8 @@ public class CodeTemplateGenerator
     {
         CreateFromTemplate
         (
-            "NewSceneScript.cs",                                              // Class's temporal name.
-            @"Assets\UHelper\Editor\Templates\SceneScriptTemplate.txt"  // Template's path.
+            "NewSceneScript.cs",                                                // Class's temporal name.
+            @"Assets\UHelper\Editor\Templates\SceneScriptTemplate.txt"          // Template's path.
         );
     }
 

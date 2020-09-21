@@ -11,6 +11,15 @@ public static class UMath
     {
         return InVal>=InMin&&InVal<=InMax;
     }
+
+    /// <summary>
+    /// 将2D坐标 映射到 目标尺寸下的坐标
+    /// </summary>
+    /// <param name="Src"></param>
+    /// <param name="SrcSize"></param>
+    /// <param name="DstSize"></param>
+    /// <param name="bRevertY"></param>
+    /// <returns></returns>
     public static Vector2 MapCoordinate2D(Vector2 Src, Vector2 SrcSize, Vector2 DstSize, bool bRevertY=false)
     {
         float _x = ScaleValue(Src.x, SrcSize.x, DstSize.x);

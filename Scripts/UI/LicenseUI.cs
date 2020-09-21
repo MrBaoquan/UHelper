@@ -7,11 +7,6 @@ using System.IO;
 using UHelper;
 using UniRx;
 
-public class MachineInfo{
-    public string CPU_ID = string.Empty;
-    public string MAC_ADDRESS = string.Empty;
-}
-
 public class LicenseUI : UIBase
 {
     const string encrypter_key = "license_key";
@@ -19,8 +14,8 @@ public class LicenseUI : UIBase
         try
         {
             var _local_license_key = PlayerPrefs.GetString(encrypter_key,"unset");
-            var _cpuid_a = fetchMachineInfo().CPU_ID;
-            var _cpuid_b = "";//Encrypter.Decrypt(_local_license_key);
+            var _cpuid_a = Machine.CPUID;
+            var _cpuid_b = Encrypter.Decrypt(_local_license_key);
             return _cpuid_b==_cpuid_a;
         }
         catch (System.Exception)
@@ -30,24 +25,10 @@ public class LicenseUI : UIBase
         }
     }
 
-    public MachineInfo fetchMachineInfo(){
-        System.Diagnostics.Process p = new System.Diagnostics.Process();
-        p.StartInfo.FileName = Path.Combine(Application.streamingAssetsPath, "fetch_MachineInfo.exe");
-        Debug.Log(p.StartInfo.FileName);
-        p.StartInfo.Arguments = "";
-        p.StartInfo.CreateNoWindow = true;
-        p.StartInfo.UseShellExecute = false;
-        p.StartInfo.StandardOutputEncoding = Encoding.Default;
-        p.StartInfo.RedirectStandardOutput = true;
-        p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-        p.Start();
-        StreamReader s = p.StandardOutput;
-        p.WaitForExit();
-        string _machineInfoData = s.ReadToEnd();
-        Debug.Log(_machineInfoData);
-        MachineInfo _machineInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<MachineInfo>(_machineInfoData);
-        s.Close();
-        return _machineInfo;
+    public void Check(){
+        if(!IsValid()){
+            Managements.UI.ShowUI<LicenseUI>();
+        }
     }
 
     private ReactiveProperty<string> licenseContent = new ReactiveProperty<string>(string.Empty);
@@ -65,8 +46,8 @@ public class LicenseUI : UIBase
         this.Get<Button>("btn_active").OnClickAsObservable().Subscribe(_1=>{
             try
             {
-                var _cpuid = fetchMachineInfo().CPU_ID;
-                string _input_key = "";//Encrypter.Decrypt(licenseContent.Value);
+                var _cpuid = Machine.CPUID;
+                string _input_key = Encrypter.Decrypt(licenseContent.Value);
                 if(_input_key==_cpuid){
                     Managements.UI.ShowDialog("序列号有效, 软件已成功激活!",_=>{
                         PlayerPrefs.SetString(encrypter_key,licenseContent.Value);

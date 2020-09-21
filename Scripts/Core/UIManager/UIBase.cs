@@ -21,6 +21,7 @@ public abstract class UIBase : MonoBehaviour
     public bool isShowing{
         get {return this.gameObject.activeInHierarchy;}
     }
+    
     public virtual void OnLoad()
     {
      

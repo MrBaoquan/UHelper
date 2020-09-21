@@ -1,4 +1,7 @@
 ﻿{
+    "Persistence":{
+
+    },
     
     "SceneEntry":{
         "LoginUI":{"asset":"LoginUI","type":"Normal","script":"LoginUI"}

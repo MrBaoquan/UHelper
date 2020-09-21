@@ -22,6 +22,7 @@ public class UHelperEditor : Editor
 
         string _uhelperConfigPath = Application.dataPath + "/UHelper/Resources/Configs";
         string _customConfigPath =Application.dataPath + "/Resources/UHelper";
+
         if(!Directory.Exists(_customConfigPath)){
             Directory.CreateDirectory(_customConfigPath);
         }
@@ -35,6 +36,19 @@ public class UHelperEditor : Editor
         if(!File.Exists(_dstUIPath)){
             File.Copy(Path.Combine(_uhelperConfigPath,"ui.json"),_dstUIPath);
         }
+
+        // 做一些项目结构
+        string _uiScriptsDir = Path.Combine(Application.dataPath, "Develop/Scripts/UI");    // 存放UI脚本
+        string _artAssetsDir = Path.Combine(Application.dataPath, "ArtAssets");             // 存放美工资源
+
+        if(!Directory.Exists(_uiScriptsDir)){
+            Directory.CreateDirectory(_uiScriptsDir);
+        }
+
+        if(!Directory.Exists(_artAssetsDir)){
+            Directory.CreateDirectory(_artAssetsDir);
+        }
+        
         AssetDatabase.Refresh();
         Debug.Log("UHelper initalize completed.");
        //AssetDatabase.LoadAssetAtPath()
