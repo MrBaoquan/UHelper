@@ -19,7 +19,6 @@ public class UAnimatorOverrideController : MonoBehaviour
             Debug.LogWarning("runtime animator controller is null");
             return;
         };
-        Debug.Log(animator.runtimeAnimatorController.animationClips);
         if(animationClips.Count<=0){
             animationClips = runtimeAnimatorController.animationClips.ToList();
             //animationClips = animator.runtimeAnimatorController.animationClips.ToList();   

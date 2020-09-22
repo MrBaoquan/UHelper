@@ -61,8 +61,6 @@ public static class MonobehaviourExtension
             }
         }
 
-        if(!bRevertOther) return;
-
         for(int _index=0;_index<StartIndex;++_index){
             var _go = _self.transform.GetChild(_index).gameObject;
             if(_go.activeInHierarchy==bActive){
@@ -70,6 +68,7 @@ public static class MonobehaviourExtension
             }
         }
 
+        if(!bRevertOther) return;
         
         for(int _index=_endIndex;_index<_self.transform.childCount;++_index){
             var _go = _self.transform.GetChild(_index).gameObject;
