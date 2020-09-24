@@ -9,25 +9,39 @@ using UniRx;
 
 public class LicenseUI : UIBase
 {
+    const string machineNumber_key = "machine_key";
     const string encrypter_key = "license_key";
     public bool IsValid(){
         try
         {
             var _local_license_key = PlayerPrefs.GetString(encrypter_key,"unset");
-            var _cpuid_a = Machine.CPUID;
-            var _cpuid_b = Encrypter.Decrypt(_local_license_key);
-            return _cpuid_b==_cpuid_a;
+            if(_local_license_key=="unset") return false;
+            var _decrypt = Encrypter.Decrypt(_local_license_key,"mrbaoquan");
+            if(_decrypt==machineID){
+                return true;
+            }    
         }
         catch (System.Exception)
         {
             return false;
-            throw;
         }
+        return false;
     }
 
     public void Check(){
         if(!IsValid()){
             Managements.UI.ShowUI<LicenseUI>();
+        }
+    }
+
+    private string machineID{
+        get{
+            string _machineID = PlayerPrefs.GetString(machineNumber_key,"unset");
+            if(_machineID=="unset"){
+                _machineID = UnityEngine.Random.Range(100000,999999).ToString();
+                PlayerPrefs.SetString(machineNumber_key, _machineID);
+            }
+            return _machineID;
         }
     }
 
@@ -43,14 +57,15 @@ public class LicenseUI : UIBase
             this.Get<Button>("btn_active").gameObject.SetActive(_.Length>=128);
         });
 
+        this.Get<Text>("text_machineNumber").text = machineID;
         this.Get<Button>("btn_active").OnClickAsObservable().Subscribe(_1=>{
             try
             {
-                var _cpuid = Machine.CPUID;
-                string _input_key = Encrypter.Decrypt(licenseContent.Value);
-                if(_input_key==_cpuid){
+                string _input_key = Encrypter.Decrypt(licenseContent.Value, "mrbaoquan");
+                if(_input_key==machineID){
                     Managements.UI.ShowDialog("序列号有效, 软件已成功激活!",_=>{
                         PlayerPrefs.SetString(encrypter_key,licenseContent.Value);
+                        PlayerPrefs.SetString(machineNumber_key, machineID);
                         Managements.UI.HideUI("LicenseUI");
                     });
                 }else{
