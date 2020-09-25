@@ -7,5 +7,4 @@ public class UHelperConfig : ScriptableObject
 {
     public string resPath = "Configs/res";
     public string uiPath = "Configs/ui";
-    
 }

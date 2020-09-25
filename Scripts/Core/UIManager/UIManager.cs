@@ -53,9 +53,12 @@ public class UIManager : Singleton<UIManager>,Manageable
         }
     }
     
-    private Dictionary<string,Dictionary<string,UIConfig>> rawUIConfigData = null;
+    private Dictionary<string,Dictionary<string,UIConfig>> customUIConfigData = null;
+    private Dictionary<string,UIConfig> persistConfigData = null;
     
+    // 所有已实例化的UI集合
     private Dictionary<string,UIBase> allSpawnedUICaches = new Dictionary<string, UIBase>();
+    private Dictionary<string,UIBase> allSpawnedPersistentUICaches = new Dictionary<string, UIBase>();
     private Dictionary<string,UIBase> normalUIs = new Dictionary<string, UIBase>();
 
     private Dictionary<string,UIBase> standaloneUIs = new Dictionary<string, UIBase>();
@@ -64,19 +67,34 @@ public class UIManager : Singleton<UIManager>,Manageable
     {
         TargetUIRoot();
         ReadConfigData();
+        spawnPersistUIs();
     }
 
     public void OnEnterScene(string InSceneName)
     {
-        foreach(var _uiComponent in allSpawnedUICaches)
-        {
-            GameObject.Destroy(_uiComponent.Value.gameObject);
-        }
-        allSpawnedUICaches.Clear();
-        popupUIs.Clear();
-        normalUIs.Clear();
+        var _allKeys = allSpawnedUICaches.Keys.ToList();
+        _allKeys.ForEach(_uiKey=>{
+            if(persistConfigData.ContainsKey(_uiKey)) return;
+
+            if(allSpawnedUICaches.ContainsKey(_uiKey)){
+                var _ui = allSpawnedUICaches[_uiKey];
+                GameObject.Destroy(_ui.gameObject);
+                allSpawnedUICaches.Remove(_uiKey);
+                if(popupUIs.Contains(_ui)) popupUIs.Remove(_ui);
+            }
+            if(normalUIs.ContainsKey(_uiKey)) normalUIs.Remove(_uiKey);
+        });
+        // foreach(var _uiComponent in allSpawnedUICaches)
+        // {
+        //     if(persistConfigData.ContainsKey(_uiComponent.Key)) continue;
+        //     GameObject.Destroy(_uiComponent.Value.gameObject);
+        // }
+        // allSpawnedUICaches.Clear();
+        // popupUIs.Clear();
+        // normalUIs.Clear();
+
         Dictionary<string,UIConfig> _uis = null;
-        if(!rawUIConfigData.TryGetValue(InSceneName, out _uis)){
+        if(!customUIConfigData.TryGetValue(InSceneName, out _uis)){
             Debug.LogWarningFormat("Find nothing ui in scene {0}",InSceneName);
             return;
         }
@@ -222,7 +240,14 @@ public class UIManager : Singleton<UIManager>,Manageable
     {
         string _uiPath = UHelperEntry.Instance.config.uiPath;
         TextAsset _uiAsset = Resources.Load<TextAsset>(_uiPath);
-        rawUIConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string,Dictionary<string,UIConfig>>>(_uiAsset.text);
+        customUIConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string,Dictionary<string,UIConfig>>>(_uiAsset.text);
+
+        var _persistUIAsset = Resources.Load<TextAsset>("Configs/Persistence/ui");
+        persistConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string,UIConfig>>(_persistUIAsset.text);
+    }
+
+    private void spawnPersistUIs(){
+        SpawnUIS(persistConfigData);
     }
 
     private void SpawnUIS(Dictionary<string,UIConfig> InUIConfigs)

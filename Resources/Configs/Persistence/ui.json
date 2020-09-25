@@ -1,0 +1,4 @@
+{
+    "DialogUI":{"asset":"DialogUI","type":"Popup","script":"DialogUI"},
+    "LicenseUI":{"asset":"LicenseUI","type":"Standalone","script":"LicenseUI"}
+}

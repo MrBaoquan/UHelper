@@ -15,16 +15,18 @@ public struct ResourceItem
 
 public class ResourceManager : Singleton<ResourceManager>,Manageable
 {
-    private Dictionary<string,List<ResourceItem>> rawConfigData;
+    private Dictionary<string,List<ResourceItem>> customConfigData;
+    private List<ResourceItem> persistConfigData;
     private Dictionary<string,Dictionary<string,UnityEngine.Object>> resources;
     public void Initialize()
     {
         this.ReadConfigData();
         resources = new Dictionary<string, Dictionary<string, UnityEngine.Object>>();
-        foreach(var _resource in rawConfigData)
+        foreach(var _resource in customConfigData)
         {
             resources.Add(_resource.Key,new Dictionary<string, UnityEngine.Object>());
         }
+        LoadAssets(persistConfigData,"Persistence");
         this.LoadAssetByKey("Persistence");
         this.LoadSceneResources();
     }
@@ -112,28 +114,34 @@ public class ResourceManager : Singleton<ResourceManager>,Manageable
     {
         string _resPath = UHelperEntry.Instance.config.resPath;
         TextAsset _resAsset = Resources.Load<TextAsset>(_resPath);
-        rawConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string,List<ResourceItem>>>(_resAsset.text);
+        customConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string,List<ResourceItem>>>(_resAsset.text);
+        var _persistAsset = Resources.Load<TextAsset>("Configs/Persistence/res");
+        persistConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ResourceItem>>(_persistAsset.text);
     }
 
     private void LoadAssetByKey(string InKey)
     {
         List<ResourceItem> _resItems;
-        if(!rawConfigData.TryGetValue(InKey,out _resItems))
+        if(!customConfigData.TryGetValue(InKey,out _resItems))
         {
             return;
         }
-        foreach(var _item in _resItems)
+        LoadAssets(_resItems,InKey);
+    }
+
+    private void LoadAssets(List<ResourceItem> InItems, string InResID){
+        foreach(var _item in InItems)
         {
             var _T = Type.GetType("UnityEngine."+_item.type+",UnityEngine");
             UnityEngine.Object[] _resources = Resources.LoadAll(_item.path,_T);
             foreach(var _resource in _resources)
             {
-                if(resources[InKey].ContainsKey(_resource.name)){
+                if(resources[InResID].ContainsKey(_resource.name)){
                     Debug.LogErrorFormat("resource key can not duplicate, error key: {0}",_resource.name);
                     continue;
                 }
-                //Debug.LogFormat("{0} Add resource {1}",InKey,_resource.name);
-                resources[InKey].Add(_resource.name,_resource);
+                Debug.LogFormat("{0} Add resource {1}", InResID, _resource.name);
+                resources[InResID].Add(_resource.name,_resource);
             }
         }
     }
