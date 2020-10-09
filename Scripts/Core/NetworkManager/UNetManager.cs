@@ -22,6 +22,17 @@ public class UNetManager : Singleton<UNetManager>,Manageable
         return tcpSocket.Listen(InIP,InPort);
     }
 
+    public void Send(byte[] InData)
+    {
+        this.tcpSocket.Send(InData);
+    }
+
+    public void Send(IMessage InMessage)
+    {
+        byte[] _data = ProtoMessage.PackageMessage(InMessage);
+        this.tcpSocket.Send(_data);
+    }
+
     public void SendAll(IMessage InMessage)
     {
         byte[] _data = ProtoMessage.PackageMessage(InMessage);

@@ -74,7 +74,7 @@ public class UIManager : Singleton<UIManager>,Manageable
     {
         var _allKeys = allSpawnedUICaches.Keys.ToList();
         _allKeys.ForEach(_uiKey=>{
-            if(persistConfigData.ContainsKey(_uiKey)) return;
+            if(isPersistUI(_uiKey)) return;
 
             if(allSpawnedUICaches.ContainsKey(_uiKey)){
                 var _ui = allSpawnedUICaches[_uiKey];
@@ -248,6 +248,12 @@ public class UIManager : Singleton<UIManager>,Manageable
 
     private void spawnPersistUIs(){
         SpawnUIS(persistConfigData);
+
+        Dictionary<string,UIConfig> _uis = null;
+        if(!customUIConfigData.TryGetValue("Persistence", out _uis)){
+            return;
+        }
+        SpawnUIS(_uis);
     }
 
     private void SpawnUIS(Dictionary<string,UIConfig> InUIConfigs)
@@ -393,6 +399,23 @@ public class UIManager : Singleton<UIManager>,Manageable
         }
         _uiComponent.Hidden();
         popupUIs.Remove(_uiComponent);
+    }
+
+    private bool isPersistUI(string InUIKey)
+    {
+
+        if(persistConfigData.ContainsKey(InUIKey)){
+            return true;
+        }
+
+        Dictionary<string,UIConfig> _cusPersistUIs = null;
+        if(customUIConfigData.TryGetValue("Persistence",out _cusPersistUIs)){
+            if(_cusPersistUIs.ContainsKey(InUIKey)){
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }

@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
 
+using UniRx;
 using Google.Protobuf;
 using Google.Protobuf.Reflection;
 
@@ -28,8 +29,16 @@ public class StateObject {
 class USocket
 {
     private MessageQueeue recvMessageQueue = new MessageQueeue();
+    private MessageQueeue messageDispatcher = new MessageQueeue();
     public MessageQueeue Messages{
         get {return recvMessageQueue;}
+    }
+
+    public bool Connected{
+        get{
+            if(tcpClient==null) return false;
+            return  !tcpClient.Poll(0,SelectMode.SelectRead)&&tcpClient.Available==0;
+        }
     }
 
     private bool available = true;
@@ -38,15 +47,42 @@ class USocket
     private Socket tcpClient;
     public bool Connect(string InIP,int InPort)
     {
-        tcpClient = new Socket(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.Tcp);
         IPAddress _ip = IPAddress.Parse(InIP);
+        IPEndPoint _endPoint = new IPEndPoint(_ip, InPort);
+        bool _result = Connect(_endPoint);
+        bool _reconnecting = false;
+        Observable.Interval(TimeSpan.FromMilliseconds(1000)).Where((_1,_2)=>!Connected&&!_reconnecting).Subscribe(_3=>{
+            Debug.Log("断开连接了...");
+            _reconnecting = true;
+            Observable.Timer(TimeSpan.FromSeconds(3.0f)).Subscribe(_4=>_reconnecting = false);
+            DisConnect(tcpClient);
+            Connect(_endPoint);
+        });
+
+        Observable.EveryUpdate().Subscribe(_=>{
+            if(Connected){
+            var _message = messageDispatcher.PopMessage();
+                while(_message!=null){
+                    Managements.Event.Fire(new NetMessage{Message = _message});
+                }
+            }
+        });
+        
+        return _result;
+    }
+
+    private bool Connect(IPEndPoint InEndPoint)
+    {
+        Debug.Log("重新连接了");
+        tcpClient = new Socket(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.Tcp);
         try
         {
-            tcpClient.Connect(new IPEndPoint(_ip, InPort));
+            tcpClient.Connect(InEndPoint);
             recvThread = new Thread(() => {
                 byte[] _dataSizeBuffer = new byte[32];
                 byte[] _typeSizeBuffer = new byte[32];
-                string _from = InIP + "_" + InPort;
+                string _from = InEndPoint.Address + "_" + InEndPoint.Port;
+                Debug.LogFormat("收到{0}",_from);
                 while (available)
                 {
                     // ----  ---- ----**----
@@ -94,11 +130,12 @@ class USocket
                         _recvMessage.From = _from;
                         _recvMessage.Data = _message;
                         recvMessageQueue.PushMessage(_recvMessage);
+                        messageDispatcher.PushMessage(_recvMessage);
                     }
                 }
             });
             recvThread.Start();
-            }
+        }
         catch(Exception e)
         {
             Debug.Log(e.Message);
@@ -107,7 +144,22 @@ class USocket
         }
         return true;
     }
-   
+
+    private bool DisConnect(Socket InSocket){
+        if(InSocket==null) return false;
+        try
+        {
+            tcpClient.Shutdown(SocketShutdown.Both);
+            tcpClient.Disconnect(false);
+            tcpClient.Close();
+            tcpClient = null;
+            recvThread.Abort();
+        }
+        catch (System.Exception)
+        {
+        }
+        return true;
+    }
 
     public static string data = null;  
     private Socket tcpServer = null;

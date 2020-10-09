@@ -47,6 +47,17 @@ public class CodeTemplateGenerator
         );
     }
 
+    [MenuItem("Assets/Create/UHelper/ConfigScript", priority = 1)]
+    [MenuItem("UHelper/Create/ConfigScript", priority = 1)]
+    private static void CreateConfigScript()
+    {
+        CreateFromTemplate
+        (
+            "NewConfig.cs",
+            @"Assets/UHelper/Editor/Templates/ConfigScriptTemplate.txt"
+        );
+    }
+
     /// <summary>Creates Script from Template's path.</summary>
     internal static UnityEngine.Object CreateScript(string pathName, string templatePath)
     {

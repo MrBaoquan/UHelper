@@ -6,6 +6,11 @@ using Google.Protobuf;
 namespace UHelper
 {
 
+public class NetMessage :UEvent
+{
+    public MessageQueeue.Message Message;
+}
+
 public class MessageQueeue
 {
     public class Message

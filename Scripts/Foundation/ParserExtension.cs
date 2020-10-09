@@ -15,5 +15,9 @@ namespace UHelper
             }
             return int.Parse(_value);
         }
+
+        public static byte[] ToBytes(this string _value){
+            return System.Text.Encoding.ASCII.GetBytes(_value);
+        }
     }
 }
