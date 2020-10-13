@@ -48,10 +48,28 @@ public class WinAPI : Singleton<WinAPI>
     
     [DllImport("user32.dll")]  
     static extern IntPtr GetForegroundWindow();  
+
+        
+    [DllImport("User32.dll")]
+    private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
     public static bool ShowWindow(WindowType InWindowType)  
     {
         return ShowWindow(GetForegroundWindow(), (int)InWindowType);  
     }
+
+    public static bool ShowWindow(string InProcessName, WindowType InWindowType)
+    {
+        UnityEngine.Debug.Log(InProcessName);
+        IntPtr _hwnd = FindWindow(null,InProcessName);
+        return ShowWindow(_hwnd,(int)WindowType.SW_SHOWMAXIMIZED);
+    }
+
+    [DllImport("User32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+    
+    [DllImport("User32.dll")]
+    private static extern bool ShowWindowAsync(IntPtr hWnd, int cmdShow);
 
     public static string CALLCMD(string InParameter)
     {

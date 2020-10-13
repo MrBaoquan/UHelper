@@ -31,4 +31,12 @@ public class UTimerManager : Singleton<UTimerManager>,Manageable
         }).Subscribe(_=>{});
     }
 
+    public IDisposable SetInterval(Action InCallback, float InInterval)
+    {
+        return Observable.Interval(TimeSpan.FromSeconds(InInterval)).Subscribe(_=>{
+            if(InCallback!=null) InCallback();
+        });
+
+    }
+
 }
