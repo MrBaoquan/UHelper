@@ -140,7 +140,7 @@ public class ResourceManager : Singleton<ResourceManager>,Manageable
                     Debug.LogErrorFormat("resource key can not duplicate, error key: {0}",_resource.name);
                     continue;
                 }
-                Debug.LogFormat("{0} Add resource {1}", InResID, _resource.name);
+                //Debug.LogFormat("{0} Add resource {1}", InResID, _resource.name);
                 resources[InResID].Add(_resource.name,_resource);
             }
         }

@@ -2,8 +2,8 @@
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
-        _Alpha ("Alpha",Range(0,1)) = 1
+        _MainTex ("Texture", 2D) = "black" {}
+        _Alpha ("Alpha",Range(0,1)) = 0
     }
     
     SubShader
@@ -18,8 +18,6 @@
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            // make fog work
-            #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
 
