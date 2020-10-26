@@ -105,6 +105,16 @@ public class ResourceManager : Singleton<ResourceManager>,Manageable
         return _resource as T;
     }
 
+    public bool Exists(string InResKey)
+    {
+        foreach (var _res in resources)
+        {
+            if(_res.Value.ContainsKey(InResKey))
+                return true;
+        }
+        return false;
+    }
+
 
     /// <summary>
     /// Private Methods Below
@@ -140,7 +150,7 @@ public class ResourceManager : Singleton<ResourceManager>,Manageable
                     Debug.LogErrorFormat("resource key can not duplicate, error key: {0}",_resource.name);
                     continue;
                 }
-                Debug.LogFormat("{0} Add resource {1}", InResID, _resource.name);
+                //Debug.LogFormat("{0} Add resource {1}", InResID, _resource.name);
                 resources[InResID].Add(_resource.name,_resource);
             }
         }

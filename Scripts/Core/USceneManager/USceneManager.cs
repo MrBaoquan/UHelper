@@ -59,6 +59,14 @@ public class USceneManager : Singleton<USceneManager>
         yield return null;
     }
 
+    public Scene Current{
+        get{
+            return SceneManager.GetActiveScene();
+        }
+        
+    }
+
+
     private bool isCurrentScene(string InSceneName)
     {
         return SceneManager.GetActiveScene().name == InSceneName;

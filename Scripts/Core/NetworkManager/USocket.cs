@@ -24,7 +24,10 @@ public class StateObject {
     public byte[] buffer = new byte[BufferSize];  
 // Received data string.  
     public StringBuilder sb = new StringBuilder();
-} 
+}
+
+public class UNetConnectedEvent:UEvent{}
+public class UNetDisconnectedEvent:UEvent{}
 
 class USocket
 {
@@ -61,9 +64,11 @@ class USocket
 
         Observable.EveryUpdate().Subscribe(_=>{
             if(Connected){
-            var _message = messageDispatcher.PopMessage();
+                var _message = messageDispatcher.PopMessage();
                 while(_message!=null){
+                    Debug.Log("----------");
                     Managements.Event.Fire(new NetMessage{Message = _message});
+                    _message = messageDispatcher.PopMessage();
                 }
             }
         });
@@ -77,7 +82,8 @@ class USocket
         tcpClient = new Socket(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.Tcp);
         try
         {
-            tcpClient.Connect(InEndPoint);
+     
+            //tcpClient.Connect(InEndPoint);
             recvThread = new Thread(() => {
                 byte[] _dataSizeBuffer = new byte[32];
                 byte[] _typeSizeBuffer = new byte[32];
@@ -134,7 +140,12 @@ class USocket
                     }
                 }
             });
-            recvThread.Start();
+
+            tcpClient.BeginConnect(InEndPoint,_result=>{
+                tcpClient.EndConnect(_result);
+                Managements.Event.Fire(new UNetConnectedEvent{});
+                recvThread.Start();
+            },null);
         }
         catch(Exception e)
         {
@@ -154,6 +165,7 @@ class USocket
             tcpClient.Close();
             tcpClient = null;
             recvThread.Abort();
+            Managements.Event.Fire(new UNetDisconnectedEvent{});
         }
         catch (System.Exception)
         {
