@@ -72,7 +72,6 @@ public class UVideoPlayer : MonoBehaviour
             rectTransform = this.transform as RectTransform;
             if(rectTransform!=null){
                 RenderTexture _videoRT = new RenderTexture((int)rectTransform.rect.width,(int)rectTransform.rect.height,0,RenderTextureFormat.ARGB32);
-                Debug.Log(rectTransform.rect);
                 videoPlayer.targetTexture = _videoRT;
                 _renderer.texture = _videoRT;
                 return;
@@ -173,7 +172,6 @@ public class UVideoPlayer : MonoBehaviour
         }
 
         vpReachEnd = _=>{
-                Debug.Log("tigger video end point:" + videoPlayer.time);
                 _bSeekCompleted = false;
                 
                 if(_looping){
@@ -204,7 +202,7 @@ public class UVideoPlayer : MonoBehaviour
                 vpReachEnd(videoPlayer);
             }
         });
-
+        //Debug.LogFormat("Prepared:{0}, Paused:{1}, Playing:{2} ",videoPlayer.isPrepared,videoPlayer.isPaused,videoPlayer.isPlaying);
 
         this.SeekTo(_startTime,_=>{
             _bSeekCompleted = true;
@@ -252,13 +250,12 @@ public class UVideoPlayer : MonoBehaviour
                 return Mathf.Abs((float)videoPlayer.time-(float)InTime)<0.2f;
             };
             vpSeekTimer = Observable.EveryUpdate().Where(_condition).Subscribe(_2=>{
-                Debug.Log("seek completed "+ videoPlayer.time);
                 videoPlayer.SetDirectAudioMute(0, false);
                 videoPlayer.Pause();
-                if(InSeekedHandler != null)
-                    InSeekedHandler(videoPlayer);
                 vpSeekTimer.Dispose();
                 vpSeekTimer = null;    
+                if(InSeekedHandler != null)
+                    InSeekedHandler(videoPlayer);
             });
         };
 

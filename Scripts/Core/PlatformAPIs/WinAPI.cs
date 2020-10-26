@@ -12,6 +12,7 @@ namespace UHelper
 
 public enum WindowType
 {
+    SW_HIDE = 0,
     SW_SHOWRESTORE = 1,
     SW_SHOWMINIMIZED = 2, //｛最小化, 激活}
     SW_SHOWMAXIMIZED = 3,//最大化  
@@ -60,9 +61,11 @@ public class WinAPI : Singleton<WinAPI>
 
     public static bool ShowWindow(string InProcessName, WindowType InWindowType)
     {
-        UnityEngine.Debug.Log(InProcessName);
         IntPtr _hwnd = FindWindow(null,InProcessName);
-        return ShowWindow(_hwnd,(int)WindowType.SW_SHOWMAXIMIZED);
+        if(_hwnd==IntPtr.Zero){
+            UnityEngine.Debug.LogWarningFormat("未找到窗口 {0}",InProcessName);
+        }
+        return ShowWindow(_hwnd,(int)InWindowType);
     }
 
     [DllImport("User32.dll")]
