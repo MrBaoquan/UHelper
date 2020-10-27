@@ -105,6 +105,16 @@ public class ResourceManager : Singleton<ResourceManager>,Manageable
         return _resource as T;
     }
 
+    public bool Exists(string InResKey)
+    {
+        foreach (var _res in resources)
+        {
+            if(_res.Value.ContainsKey(InResKey))
+                return true;
+        }
+        return false;
+    }
+
 
     /// <summary>
     /// Private Methods Below

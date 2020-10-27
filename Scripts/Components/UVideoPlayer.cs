@@ -185,7 +185,8 @@ public class UVideoPlayer : MonoBehaviour
                     videoPlayer.loopPointReached -= vpReachEnd;
                     vpLoopTimer = null;
                 }
-                OnReachEndHandler(videoPlayer);
+                if(OnReachEndHandler!=null)
+                    OnReachEndHandler(videoPlayer);
         };
 
         vpLoopTimer = Observable.EveryUpdate().Where(_=>_bSeekCompleted).Subscribe(_1=>{
