@@ -175,8 +175,12 @@ public static class ProbufExtension
         using (MemoryStream ms = new MemoryStream(InData))
         {
             Type _type = Type.GetType(InType);
+            UnityEngine.Debug.Log(_type);
             var _descriptor =(MessageDescriptor)_type.GetProperty("Descriptor",BindingFlags.Public|BindingFlags.Static).GetValue(null,null);
-            return _descriptor.Parser.ParseFrom(InData);
+            UnityEngine.Debug.Log(_descriptor);
+            var _message = _descriptor.Parser.ParseFrom(InData);
+            UnityEngine.Debug.Log(_message);
+            return _message;
         }
     }
 

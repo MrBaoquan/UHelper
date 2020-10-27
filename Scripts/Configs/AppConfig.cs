@@ -20,6 +20,7 @@ namespace UHelper
 
     public class AppConfig : UConfig
     {
+        public float KeepTopWindowInterval = 0;
         public ScreenConfig Screen = new ScreenConfig();
 
         [XmlArray("Displays")]

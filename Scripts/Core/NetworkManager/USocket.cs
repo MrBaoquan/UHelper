@@ -58,17 +58,18 @@ class USocket
             DisConnect(tcpClient);
             Connect(_endPoint);
         });
+        dispatchMessage();
+        return _result;
+    }
 
+    private void dispatchMessage(){
         Observable.EveryUpdate().Subscribe(_=>{
-            if(Connected){
             var _message = messageDispatcher.PopMessage();
-                while(_message!=null){
-                    Managements.Event.Fire(new NetMessage{Message = _message});
-                }
+            while(_message!=null){
+                Managements.Event.Fire(new NetMessage{Message = _message});
+                _message = messageDispatcher.PopMessage();
             }
         });
-        
-        return _result;
     }
 
     private bool Connect(IPEndPoint InEndPoint)
@@ -82,7 +83,6 @@ class USocket
                 byte[] _dataSizeBuffer = new byte[32];
                 byte[] _typeSizeBuffer = new byte[32];
                 string _from = InEndPoint.Address + "_" + InEndPoint.Port;
-                Debug.LogFormat("收到{0}",_from);
                 while (available)
                 {
                     // ----  ---- ----**----
@@ -175,6 +175,16 @@ class USocket
         public byte[] buffer = new byte[BufferSize];  
     // Received data string.  
         public StringBuilder sb = new StringBuilder();
+
+        public byte[] RawTypeSize = new byte[32];
+        public byte[] RawDataSize = new byte[32];
+
+        public byte[] RawTypeName = null;
+        public string TypeName;
+        public byte[] RawData = null;
+
+        // 当前读取到第几步 
+        public int Step = -1;
     }  
 
     private ManualResetEvent tcpServerAllDone = new ManualResetEvent(false); 
@@ -210,6 +220,7 @@ class USocket
                 }  
             });
             listenThread.Start();
+            dispatchMessage();
             return true;
         } catch (Exception e) {  
             Debug.Log(e.ToString());  
@@ -237,13 +248,11 @@ class USocket
         if(!this.allClients.ContainsKey(clientKey)){
             this.allClients.Add(clientKey,handler);
         }
-        
-
         // Create the state object.  
-        // StateObject state = new StateObject();  
-        // state.workSocket = handler;  
-        // handler.BeginReceive( state.buffer, 0, StateObject.BufferSize, 0,  
-        //     new AsyncCallback(ReadCallback), state);  
+        StateObject state = new StateObject();
+        state.workSocket = handler;
+        handler.BeginReceive( state.RawTypeSize, 0, 32, 0,  
+            new AsyncCallback(ReadCallback), state);  
     }  
   
     public void ReadCallback(IAsyncResult ar) {  
@@ -252,11 +261,47 @@ class USocket
         // Retrieve the state object and the handler socket  
         // from the asynchronous state object.  
         StateObject state = (StateObject) ar.AsyncState;  
-        Socket handler = state.workSocket;  
+        Socket handler = state.workSocket;
+        
   
         // Read data from the client socket.
-        int bytesRead = handler.EndReceive(ar);  
-  
+        int bytesRead = handler.EndReceive(ar);
+        if(state.Step==-1&&bytesRead==32){
+            state.Step = 0;
+            var _typeSize = BitConverter.ToInt32(state.RawTypeSize, 0);
+            state.RawTypeName = new byte[_typeSize];
+            handler.BeginReceive(state.RawDataSize,0,32,0, new AsyncCallback(ReadCallback),state);
+            return;
+        }
+
+        if(state.Step==0&&bytesRead==32){
+            state.Step = 1;
+            int _dataSize = BitConverter.ToInt32(state.RawDataSize,0);
+            state.RawData = new byte[_dataSize];
+            handler.BeginReceive(state.RawTypeName,0,state.RawTypeName.Length,0, new AsyncCallback(ReadCallback), state);
+            return;
+        }
+
+        if(state.Step==1){
+            state.Step = 2;
+            var _typeName = System.Text.Encoding.Default.GetString(state.RawTypeName).TrimEnd('\0');
+            state.TypeName = _typeName;
+            handler.BeginReceive(state.RawData,0,state.RawData.Length,0,new AsyncCallback(ReadCallback), state);
+            return;
+        }
+
+        if(state.Step == 2){
+            state.Step = -1;
+            IMessage _message = state.RawData.DeserializeFromTypeString(state.TypeName);
+            MessageQueeue.Message _recvMessage = new MessageQueeue.Message();
+            _recvMessage.From = string.Empty;
+            _recvMessage.Data = _message;
+            recvMessageQueue.PushMessage(_recvMessage);
+            messageDispatcher.PushMessage(_recvMessage);
+            handler.BeginReceive(state.RawTypeSize,0,32,0,new AsyncCallback(ReadCallback),state);
+        }
+        
+        return ;
         if (bytesRead > 0) {  
             // There  might be more data, so store the data received so far.  
             state.sb.Append(Encoding.ASCII.GetString(  

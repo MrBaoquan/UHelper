@@ -19,6 +19,8 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
 {
     [HideInInspector]
     public UHelperConfig config;
+
+    private AppConfig appConfig;
     private void Awake() 
     {
         Debug.Log("UHelper.Awake");
@@ -56,17 +58,18 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
 
     private void Initialize()
     {
-        AppConfig _config = Managements.Config.Get<AppConfig>();
+        appConfig = Managements.Config.Get<AppConfig>();
         
         activeAllDisplays();
 
-        if(_config.Screen.Mode==UFullScreenMode.MinimizedWindow){
+        if(appConfig.Screen.Mode==UFullScreenMode.MinimizedWindow){
             WinAPI.ShowWindow(WindowType.SW_SHOWMINIMIZED);
         }else{
-            
-            Screen.SetResolution(_config.Screen.Width,_config.Screen.Height,(FullScreenMode)_config.Screen.Mode);
+            Screen.SetResolution(appConfig.Screen.Width,appConfig.Screen.Height,(FullScreenMode)appConfig.Screen.Mode);
         }
-        Debug.LogFormat("set full screen mode:{0}, width:{1}, height:{2}",_config.Screen.Mode,_config.Screen.Width,_config.Screen.Height);
+        Debug.LogFormat("set full screen mode:{0}, width:{1}, height:{2}",appConfig.Screen.Mode,appConfig.Screen.Width,appConfig.Screen.Height);
+
+        KeepWindowTop();
     }
 
     private void activeAllDisplays(){
@@ -77,6 +80,8 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
             }
             Managements.Config.Serialize<AppConfig>();
         }
+
+        if(Display.displays.Length<=1) return;
         
         for(int _index=0;_index<Display.displays.Length;++_index){
             if(_index>=_config.Displays.Count) break;
@@ -84,9 +89,15 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
             Display.displays[_index].Activate(_screenConfig.Width,_screenConfig.Height,_screenConfig.RefreshRate);
             Debug.LogFormat("Display {0}",_index);
         }
-
     }
 
+
+    private void KeepWindowTop()
+    {
+        if(appConfig.KeepTopWindowInterval>0){
+            AppUtility.KeepWindowTop(appConfig.KeepTopWindowInterval);
+        }
+    }
     private void OnDestroy() {
         Debug.Log("UHelper.OnDestroy");
     }
