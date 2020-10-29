@@ -91,6 +91,13 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
         }
     }
 
+    private void Update() {
+        if(Input.GetKey(KeyCode.LeftShift)&&Input.GetKeyDown(KeyCode.S)){
+            Managements.Config.SerializeAll();
+            Debug.Log("Save config successfully.");
+        }
+    }
+
 
     private void KeepWindowTop()
     {
