@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Timers;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,6 +9,10 @@ using UniRx;
 
 public class UTimerManager : Singleton<UTimerManager>,Manageable
 {
+
+    Timer _timerDbc;
+    Timer _timerTrt;
+
     public void Initialize(){}
 
     public void UnInitialize(){}
@@ -38,5 +43,19 @@ public class UTimerManager : Singleton<UTimerManager>,Manageable
         });
 
     }
+
+    public Action Throttle(float InTime, Action InAction)
+    {
+        float _last = 0;
+        return ()=>{
+            float _delta = Time.time - _last;
+            if(_delta>=InTime){
+                InAction();
+                _last = Time.time;
+            }
+        };
+    }
+
+
 
 }

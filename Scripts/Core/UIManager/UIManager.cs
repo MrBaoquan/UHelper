@@ -323,6 +323,8 @@ public class UIManager : Singleton<UIManager>,Manageable
     private void showNormalUI(string InKey)
     {
         UIBase _uiComponent = allSpawnedUICaches[InKey];
+        if(normalUIs.ContainsKey(InKey)) return;
+
         _uiComponent.Show();
         normalUIs.Add(InKey,_uiComponent);
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 using DG.Tweening;
@@ -9,6 +10,8 @@ public class SphereLayout : MonoBehaviour
     public float distance = 1000f;
     public float angle = 60f;
     public float rotation = 0f;
+
+    public float delta = 40f;
 
     [SerializeField]
     bool loop = false;
@@ -27,7 +30,8 @@ public class SphereLayout : MonoBehaviour
     }
 
     private void OnEnable() {
-        Debug.Log("on enable");
+        // syncLayout();
+        // syncRotation();
     }
 
     private void OnValidate() {
@@ -53,18 +57,37 @@ public class SphereLayout : MonoBehaviour
         syncRotation();
     }
 
+    public void Collapse(float InEnd=10.0f, Action InCallback=null, float InDuration=0.3f)
+    {
+        DoAngle(InEnd,InDuration, InCallback);
+    }
+
+    public void Expand(float InEnd=45, float InDuration=0.3f)
+    {
+        DoAngle(InEnd,InDuration);
+    }
+
+    private void DoAngle(float InEnd, float InDuration=0.3f, Action InCallback=null){
+        DOTween.To(()=>angle,_=>{
+            angle = _;
+            syncRotation();
+        },InEnd,0.3f).OnComplete(()=>{
+            if(InCallback!=null)  InCallback();
+        });
+    }
+
     void syncLayout(){
-        Vector3 _startPoint = transform.position + transform.forward * -distance;
-        transform.localEulerAngles = Vector3.right * rotation;
+        Vector3 _startPoint = transform.position + transform.forward * - distance;
+        transform.localEulerAngles = transform.right * rotation;
         int _index = 0;
         var _children = gameObject.Children();
         //_children.Reverse();
         _children.ForEach(_transform=>{
             _transform.position = _startPoint.Rotate(transform.right * _index* -angle, transform.position);
-            _transform.rotation = Quaternion.Euler(Vector3.forward*-1);
+            _transform.rotation = Quaternion.Euler(transform.forward*-1);
 
-            float _delta = (transform.childCount - Mathf.Abs(currentIndex - _index)) * 10.0f;
-            _transform.DOScale(Vector3.one *_delta,0.3f);
+            float _delta = (transform.childCount - Mathf.Abs(currentIndex - _index)) * delta;
+            _transform.DOScale(Vector3.one *_delta, 0.3f);
             ++_index;
         });
     }
@@ -72,7 +95,7 @@ public class SphereLayout : MonoBehaviour
     void syncRotation(){
         DOTween.To(()=>rotation,_=>{
             rotation=_;
-            transform.rotation = Quaternion.Euler(Vector3.right*_);
+            transform.rotation = Quaternion.Euler(transform.right*_);
             syncLayout();
         },(currentIndex*angle),0.3f);
     }
@@ -83,5 +106,8 @@ public class SphereLayout : MonoBehaviour
 
     void Update()
     {
+        if(Input.GetKeyDown(KeyCode.G)){
+            syncRotation();
+        }
     }
 }
