@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 using System;
@@ -37,6 +38,13 @@ public class ConfigManager : Singleton<ConfigManager>
             UReflection.SetFieldValue(_configInstance,"__path",_path);
             this.configs.Add(_configClass.Name, _configInstance);
         }
+    }
+
+    public void SerializeAll()
+    {
+        this.configs.Values.ToList().ForEach(_config=>{
+            UXmlSerialization.Serialize(_config,_config.__path);
+        });
     }
 
     public T Get<T>() where T:class
