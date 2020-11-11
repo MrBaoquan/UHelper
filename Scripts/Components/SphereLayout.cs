@@ -30,8 +30,7 @@ public class SphereLayout : MonoBehaviour
     }
 
     private void OnEnable() {
-        // syncLayout();
-        // syncRotation();
+        syncRotation();
     }
 
     private void OnValidate() {
@@ -78,24 +77,33 @@ public class SphereLayout : MonoBehaviour
 
     void syncLayout(){
         Vector3 _startPoint = transform.position + transform.forward * - distance;
-        transform.localEulerAngles = transform.right * rotation;
         int _index = 0;
         var _children = gameObject.Children();
-        //_children.Reverse();
         _children.ForEach(_transform=>{
-            _transform.position = _startPoint.Rotate(transform.right * _index* -angle, transform.position);
-            _transform.rotation = Quaternion.Euler(transform.forward*-1);
-
+            //_transform.position = _startPoint.Rotate(transform.right * _index * - angle, transform.position);
+            _transform.position = _startPoint;
+            _transform.RotateAround(transform.position, -transform.right, angle*_index);
+            var _euler = transform.eulerAngles;
+            _euler.x = 0;           // 舍弃 X 轴方向的旋转
+            _transform.eulerAngles = _euler;
             float _delta = (transform.childCount - Mathf.Abs(currentIndex - _index)) * delta;
             _transform.DOScale(Vector3.one *_delta, 0.3f);
             ++_index;
         });
     }
 
+    Vector3 eulerAngle(float InAxisX){
+        Vector3 _angle = transform.localEulerAngles;
+        _angle.x = InAxisX;
+        return _angle;
+    }
+
     void syncRotation(){
         DOTween.To(()=>rotation,_=>{
             rotation=_;
-            transform.rotation = Quaternion.Euler(transform.right*_);
+            Vector3 _angle = transform.localEulerAngles;
+            _angle.x = _;
+            transform.localRotation = Quaternion.Euler(_angle);
             syncLayout();
         },(currentIndex*angle),0.3f);
     }
@@ -106,8 +114,16 @@ public class SphereLayout : MonoBehaviour
 
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.G)){
-            syncRotation();
-        }
+        // if(Input.GetKeyDown(KeyCode.G)){
+        //     syncRotation();
+        // }
+
+        // if(Input.GetKeyDown(KeyCode.S)){
+        //     syncLayout();
+        // }
+
+        // if(Input.GetKeyDown(KeyCode.N)){
+        //     SelectNext();
+        // }
     }
 }
