@@ -9,9 +9,7 @@ using UnityEngine;
 namespace UHelper
 {
 
-public class UEvent{
-
-}
+public abstract class UEvent{}
 
 public interface IEventHandler{
     void SubscribeEvents();

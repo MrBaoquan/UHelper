@@ -17,7 +17,7 @@ public class UTimerManager : Singleton<UTimerManager>,Manageable
 
     public void UnInitialize(){}
 
-    public void SetTimeout(float InDuration, Action OnCompleted = null, Action<float> OnUpdate = null, float InInterval=0.05f)
+    public IDisposable SetTimeout(float InDuration, Action OnCompleted = null, Action<float> OnUpdate = null, float InInterval=0.05f)
     {
         float _startTime = Time.time;
         IDisposable _timerHandler = null;
@@ -34,6 +34,7 @@ public class UTimerManager : Singleton<UTimerManager>,Manageable
             }
             return _condition;
         }).Subscribe(_=>{});
+        return _timerHandler;
     }
 
     public IDisposable SetInterval(Action InCallback, float InInterval)
@@ -54,6 +55,12 @@ public class UTimerManager : Singleton<UTimerManager>,Manageable
                 _last = Time.time;
             }
         };
+    }
+
+    public void NextFrame(Action InAction){
+        Observable.NextFrame().Subscribe(_=>{
+            if(InAction!=null) InAction();
+        });
     }
 
 

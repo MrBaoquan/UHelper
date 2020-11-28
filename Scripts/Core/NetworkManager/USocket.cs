@@ -45,7 +45,6 @@ class USocket
     }
 
     private bool available = true;
-    Thread recvThread;
 
     private Socket tcpClient;
     public bool Connect(string InIP,int InPort)
@@ -55,7 +54,7 @@ class USocket
         bool _result = Connect(_endPoint);
         bool _reconnecting = false;
         Observable.Interval(TimeSpan.FromMilliseconds(1000)).Where((_1,_2)=>!Connected&&!_reconnecting).Subscribe(_3=>{
-            Debug.Log("断开连接了...");
+            Debug.Log("重连中...");
             _reconnecting = true;
             Observable.Timer(TimeSpan.FromSeconds(3.0f)).Subscribe(_4=>_reconnecting = false);
             DisConnect(tcpClient);
@@ -71,87 +70,54 @@ class USocket
             while(_message!=null){
                 Managements.Event.Fire(new NetMessage{Message = _message});
                 _message = messageDispatcher.PopMessage();
-
             }
         });
     }
 
+
+    private Type MsgReceiver = null;
+    public void SetMessageReceiver(Type T)
+    {
+        if(!T.IsSubclassOf(typeof(UMessageReceiver))){
+            Debug.LogWarning("not a valid class");
+            return;
+        }
+        MsgReceiver = T;
+    }
+
     private bool Connect(IPEndPoint InEndPoint)
     {
-        Debug.Log("重新连接了");
         tcpClient = new Socket(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.Tcp);
-        try
-        {
-     
-            //tcpClient.Connect(InEndPoint);
-            recvThread = new Thread(() => {
-                byte[] _dataSizeBuffer = new byte[32];
-                byte[] _typeSizeBuffer = new byte[32];
-                string _from = InEndPoint.Address + "_" + InEndPoint.Port;
-                while (available)
+        
+
+            Observable.Start(()=>{
+                try
                 {
-                    // ----  ---- ----**----
-                    // 类型大小
-                    tcpClient.Receive(_typeSizeBuffer, 0, 32, 0);
-                    tcpClient.Receive(_dataSizeBuffer, 0, 32, 0);
-
-                    int _typeSize = BitConverter.ToInt32(_typeSizeBuffer,0);
-                    int _dataSize = BitConverter.ToInt32(_dataSizeBuffer, 0);
-
-                    byte[] _type = null;
-                    string _typeName = string.Empty;
-                    if (_typeSize > 0)
-                    {
-                        _type = new byte[_typeSize];
-                        tcpClient.Receive(_type, 0, _typeSize, 0);
-                        _typeName = System.Text.Encoding.Default.GetString(_type).TrimEnd('\0');
-                    }
-
-                    if (_typeName == string.Empty)
-                    {
-                        continue;
-                    }
-
-                    byte[] _data = null;
-                    if (_dataSize > 0)
-                    {
-                        _data = new byte[_dataSize];
-                        tcpClient.Receive(_data, 0, _dataSize, 0);
-                    }
-
-                    
-                    IMessage _message = null;
-                    if (_data != null)
-                    {
-                        _message = _data.DeserializeFromTypeString(_typeName);
-                    }
-                    else
-                    {
-                        _message = ProtoMessage.CreateMessage(_typeName);
-                    }
-                    if (_message != null)
-                    {
-                        MessageQueeue.Message _recvMessage = new MessageQueeue.Message();
-                        _recvMessage.From = _from;
-                        _recvMessage.Data = _message;
-                        recvMessageQueue.PushMessage(_recvMessage);
-                        messageDispatcher.PushMessage(_recvMessage);
-                    }
+                    tcpClient.Connect(InEndPoint);
+                    return true;
                 }
+                catch(Exception e)
+                {
+                    Debug.Log(e.Message);
+                    return false;
+                }
+            }).ObserveOnMainThread().Subscribe(_=>{
+                Debug.LogFormat("connect result: {0}",_);
+                if(!_) return;
+                Managements.Event.Fire(new UNetConnectedEvent{});
+                startNewReceiver(tcpClient);
             });
 
-            tcpClient.BeginConnect(InEndPoint,_result=>{
-                tcpClient.EndConnect(_result);
-                Managements.Event.Fire(new UNetConnectedEvent{});
-                recvThread.Start();
-            },null);
-        }
-        catch(Exception e)
-        {
-            Debug.Log(e.Message);
-            return false;
+            // tcpClient.BeginConnect(InEndPoint,_result=>{
+            //     tcpClient.EndConnect(_result);
+            // },null);
 
-        }
+            // 3秒后还没连上  要准备重连
+            Managements.Timer.SetTimeout(3.0f,()=>{
+                if(!tcpClient.Connected){
+                    DisConnect(tcpClient);
+                }
+            });
         return true;
     }
 
@@ -159,12 +125,11 @@ class USocket
         if(InSocket==null) return false;
         try
         {
+            Managements.Event.Fire(new UNetDisconnectedEvent());
             tcpClient.Shutdown(SocketShutdown.Both);
             tcpClient.Disconnect(false);
             tcpClient.Close();
             tcpClient = null;
-            recvThread.Abort();
-            Managements.Event.Fire(new UNetDisconnectedEvent{});
         }
         catch (System.Exception)
         {
@@ -255,86 +220,20 @@ class USocket
         Socket listener = (Socket) ar.AsyncState;  
         Socket handler = listener.EndAccept(ar);
         string clientKey = this.getClientKey(handler);
-        Debug.LogWarningFormat("add connected key {0}",clientKey);
         if(!this.allClients.ContainsKey(clientKey)){
             this.allClients.Add(clientKey,handler);
         }
-        // Create the state object.  
-        StateObject state = new StateObject();
-        state.workSocket = handler;
-        handler.BeginReceive( state.RawTypeSize, 0, 32, 0,  
-            new AsyncCallback(ReadCallback), state);  
+
+        startNewReceiver(handler);
     }  
-  
-    public void ReadCallback(IAsyncResult ar) {  
-        String content = String.Empty;  
-  
-        // Retrieve the state object and the handler socket  
-        // from the asynchronous state object.  
-        StateObject state = (StateObject) ar.AsyncState;  
-        Socket handler = state.workSocket;
-        
-  
-        // Read data from the client socket.
-        int bytesRead = handler.EndReceive(ar);
-        if(state.Step==-1&&bytesRead==32){
-            state.Step = 0;
-            var _typeSize = BitConverter.ToInt32(state.RawTypeSize, 0);
-            state.RawTypeName = new byte[_typeSize];
-            handler.BeginReceive(state.RawDataSize,0,32,0, new AsyncCallback(ReadCallback),state);
-            return;
-        }
 
-        if(state.Step==0&&bytesRead==32){
-            state.Step = 1;
-            int _dataSize = BitConverter.ToInt32(state.RawDataSize,0);
-            state.RawData = new byte[_dataSize];
-            handler.BeginReceive(state.RawTypeName,0,state.RawTypeName.Length,0, new AsyncCallback(ReadCallback), state);
-            return;
-        }
 
-        if(state.Step==1){
-            state.Step = 2;
-            var _typeName = System.Text.Encoding.Default.GetString(state.RawTypeName).TrimEnd('\0');
-            state.TypeName = _typeName;
-            handler.BeginReceive(state.RawData,0,state.RawData.Length,0,new AsyncCallback(ReadCallback), state);
-            return;
-        }
-
-        if(state.Step == 2){
-            state.Step = -1;
-            IMessage _message = state.RawData.DeserializeFromTypeString(state.TypeName);
-            MessageQueeue.Message _recvMessage = new MessageQueeue.Message();
-            _recvMessage.From = string.Empty;
-            _recvMessage.Data = _message;
-            recvMessageQueue.PushMessage(_recvMessage);
-            messageDispatcher.PushMessage(_recvMessage);
-            handler.BeginReceive(state.RawTypeSize,0,32,0,new AsyncCallback(ReadCallback),state);
-        }
-        
-        return ;
-        if (bytesRead > 0) {  
-            // There  might be more data, so store the data received so far.  
-            state.sb.Append(Encoding.ASCII.GetString(  
-                state.buffer, 0, bytesRead));  
-  
-            // Check for end-of-file tag. If it is not there, read
-            // more data.  
-            content = state.sb.ToString();  
-            if (content.IndexOf("<EOF>") > -1) {  
-                // All the data has been read from the
-                // client. Display it on the console.  
-                Debug.LogFormat("Read {0} bytes from socket. \n Data : {1}",  
-                    content.Length, content );  
-                // Echo the data back to the client.  
-                //Send(handler, content);  
-            } else {  
-                // Not all data received. Get more.  
-                handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,  
-                new AsyncCallback(ReadCallback), state);  
-            }  
-        }  
-    }  
+    public List<UMessageReceiver> messageReceivers = new List<UMessageReceiver>();
+    private void startNewReceiver(Socket InSocket){
+        UMessageReceiver _receiver = Activator.CreateInstance(MsgReceiver) as UMessageReceiver;
+        messageReceivers.Add(_receiver);
+        _receiver.Prepare(InSocket,messageDispatcher);
+    }
   
     private void Send(Socket handler, byte[] InData) {    
         handler.BeginSend(InData, 0, InData.Length, 0,  
@@ -381,18 +280,27 @@ class USocket
         {
             return 0;
         }
-        return tcpClient.Send(InData);
+        try
+        {
+            return tcpClient.Send(InData);    
+        }
+        catch (System.Exception e)
+        {
+            //Debug.LogError(e.Message);
+            DisConnect(tcpClient);
+        }
+        return 0;
     }
 
     public void Dispose()
     {
+
+        messageReceivers.ForEach(_receiver=>{
+            _receiver.Dispose();
+        });
         available = false;
         tcpServerAllDone.Set();
 
-        if(recvThread!=null){
-            recvThread.Abort();
-        }
-        
         if(listenThread!=null){
             listenThread.Abort();
         }

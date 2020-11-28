@@ -95,6 +95,40 @@ public class WinAPI : Singleton<WinAPI>
             return s.ReadToEnd().Trim();
         }
     }
+
+    public const int MOUSEEVENTF_LEFTDOWN = 0x2;        
+    public const int MOUSEEVENTF_LEFTUP = 0x4;
+
+    public const int MOUSEEVENTF_MIDDLEDOWN = 0x20;
+
+    public const int MOUSEEVENTF_MIDDLEUP = 0x40;
+
+    public const int MOUSEEVENTF_MOVE = 0x1;
+
+    public const int MOUSEEVENTF_RIGHTDOWN = 0x8;
+
+    public const int MOUSEEVENTF_RIGHTUP = 0x10;
+    
+    [DllImport("user32.dll", EntryPoint="mouse_event")]
+
+    public static extern void mouse_event (
+
+        int dwFlags,
+
+        int dx,
+
+        int dy,
+
+        int cButtons,
+
+        int dwExtraInfo
+    );
+
+    [DllImport("User32")]  
+    public extern static void SetCursorPos(int x, int y);  
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint="ShowCursor")]
+    public extern static bool ShowCursor(bool bShow );
 }
 
 

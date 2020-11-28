@@ -12,8 +12,9 @@ public static class UXmlSerialization
         serializer.Serialize(writer.BaseStream, item);
         writer.Close();
     }
-    public static T Deserialize<T>(string path)
+    public static T Deserialize<T>(string path) where T : class
     {
+        if(!File.Exists(path)) return default(T);
         XmlSerializer serializer = new XmlSerializer(typeof(T));
         StreamReader reader = new StreamReader(path);
         try

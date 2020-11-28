@@ -80,6 +80,10 @@ public static class UMath
         return Rotate(vector, Quaternion.Euler(x, y, z), pivot);
     }
 
+    public static double FMode(double X, double Y){
+        return X - (int)(X/Y)*Y;
+    }
+
 
 }
 

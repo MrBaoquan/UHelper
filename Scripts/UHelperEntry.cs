@@ -33,7 +33,7 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
         GameObject _utilGO = new GameObject("UHelperUtils");
         _utilGO.transform.parent = this.transform;
         _utilGO.AddComponent(typeof(MonobehaviourUtil));
-        
+                
 
         // 配置文件
         Managements.Config.Initialize();
@@ -70,6 +70,7 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
         Debug.LogFormat("set full screen mode:{0}, width:{1}, height:{2}",appConfig.Screen.Mode,appConfig.Screen.Width,appConfig.Screen.Height);
 
         KeepWindowTop();
+
     }
 
     private void activeAllDisplays(){
@@ -107,6 +108,11 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
     }
     private void OnDestroy() {
         Debug.Log("UHelper.OnDestroy");
+    }
+
+
+    private void OnApplicationQuit() {
+        Debug.Log("application quit");
     }
     
 }  

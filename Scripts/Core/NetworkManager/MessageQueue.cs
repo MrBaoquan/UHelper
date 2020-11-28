@@ -6,22 +6,23 @@ using Google.Protobuf;
 namespace UHelper
 {
 
-public class NetMessage :UEvent
+
+public class UMessage : UEvent
 {
-    public MessageQueeue.Message Message;
+    public byte[] RawData = null;
+}
+
+public class NetMessage : UEvent
+{
+    public UMessage Message;
 }
 
 public class MessageQueeue
 {
-    public class Message
-    {
-        public string From=string.Empty;
-        public IMessage Data;
-    }
 
-    private Queue<Message> messages = new Queue<Message>();
+    private Queue<UMessage> messages = new Queue<UMessage>();
 
-    public void PushMessage(Message InMessage)
+    public void PushMessage(UMessage InMessage)
     {
         lock (this)
         {
@@ -29,7 +30,7 @@ public class MessageQueeue
         }
     }
 
-    public Message PopMessage()
+    public UMessage PopMessage()
     {
         lock(this){
             if(messages.Count<=0){

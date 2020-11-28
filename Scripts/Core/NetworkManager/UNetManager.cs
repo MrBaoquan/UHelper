@@ -1,3 +1,4 @@
+using System;
 using UniRx;
 using Google.Protobuf;
 using UHelper;
@@ -9,9 +10,18 @@ public class UNetManager : Singleton<UNetManager>,Manageable
 {
     private USocket tcpSocket = new USocket();
     private bool bConnected = false;
+    public bool TcpConnected{
+        get{
+            return tcpSocket.Connected;
+        }
+    }
 
     public void Initialize(){}
     public void UnInitialize(){}
+
+    public void SetReceiverHandler(Type T){
+        tcpSocket.SetMessageReceiver(T);
+    }
     public bool Connect(string InIP,int InPort)
     {
         return tcpSocket.Connect(InIP,InPort);
@@ -44,7 +54,7 @@ public class UNetManager : Singleton<UNetManager>,Manageable
         this.tcpSocket.SendAll(InData);
     }
 
-    public MessageQueeue.Message GetMessage(){
+    public UMessage GetMessage(){
         return this.tcpSocket.Messages.PopMessage();
     }
 
@@ -52,8 +62,6 @@ public class UNetManager : Singleton<UNetManager>,Manageable
     {
         this.tcpSocket.Dispose();
     }
-
-    
 
 }
 
