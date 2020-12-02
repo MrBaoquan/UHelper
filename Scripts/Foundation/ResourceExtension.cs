@@ -35,17 +35,21 @@ public static class ResourceExtension{
 
     // 加载外部图片资源
     private static IEnumerator LoadTexture2D(string InPath, IObserver<Texture2D> observer, CancellationToken cancellationToken){
-        Debug.Log(InPath);
         using (UnityWebRequest _www = UnityWebRequestTexture.GetTexture(InPath))
         {
             yield return _www.SendWebRequest();
             if(_www.isNetworkError){
-                Debug.LogError(_www.error);
+                Debug.LogWarning(_www.error);
                 observer.OnError(new Exception(_www.error));
             }else{
-                var _texture = DownloadHandlerTexture.GetContent(_www);
-                observer.OnNext(_texture);
-                observer.OnCompleted();
+                try{
+                    var _texture = DownloadHandlerTexture.GetContent(_www);
+                    observer.OnNext(_texture);
+                    observer.OnCompleted();
+                }catch(Exception _e){
+                    observer.OnError(new Exception(_e.Message));
+                }
+                
             }
         }
     }

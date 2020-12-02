@@ -68,22 +68,24 @@ public class UScrollView : MonoBehaviour
         }
     }
 
-    public void ScrollToPrev()
+    public int ScrollToPrev()
     {
         int _prevID = ClosetCenterItemIndex() - 1;
         if(_prevID < HalfShowCount){
             _prevID = HalfShowCount;
         }
         ScrollTo(_prevID);
+        return _prevID;
     }
 
-    public void ScrollToNext()
+    public int ScrollToNext()
     {
         int _nextID = ClosetCenterItemIndex() + 1;
         if(_nextID>(content.childCount - HalfShowCount - 1)){
             _nextID = content.childCount - HalfShowCount - 1;
         }
         ScrollTo(_nextID);
+        return _nextID;
     }
 
     // public int MaxShowCount()
@@ -101,11 +103,15 @@ public class UScrollView : MonoBehaviour
 
     public void ScrollTo(int InIndex)
     {
-        Debug.LogFormat("scroll to {0}",InIndex);
-        float _position = scrollRect.GetItemNormallizedPosition(content.GetChild(InIndex) as RectTransform);
+        var _transform = content.GetChild(InIndex);
+        float _position = scrollRect.GetItemNormallizedPosition(_transform as RectTransform);
         DOTween.To(()=>scrollRect.horizontalNormalizedPosition,_=>{
             scrollRect.horizontalNormalizedPosition = _;
-        },_position,0.15f);
+        },_position,0.15f).OnComplete(()=>{
+            if(OnRetarget!=null){
+                OnRetarget(_transform as RectTransform);
+            }
+        });
     }
 
     private void spawnNormalLayout(){
@@ -192,31 +198,21 @@ public class UScrollView : MonoBehaviour
         return ClosetCenterItem().GetSiblingIndex();
     }
 
+    public Action<RectTransform> OnRetarget = null;
     void Start()
     {
         scrollRect.OnEndDragAsObservable().Subscribe(_=>{
             var _rectTransform = ClosetCenterItem() as RectTransform;
-             float _normalizedPosition = scrollRect.GetItemNormallizedPosition(_rectTransform);
 
-            DOTween.To(()=>scrollRect.horizontalNormalizedPosition,_2=>{
-                scrollRect.horizontalNormalizedPosition = _2;
-            },_normalizedPosition,0.15f).OnComplete(()=>{
-                
-            });
+            ScrollTo(_rectTransform.GetSiblingIndex());
+            // float _normalizedPosition = scrollRect.GetItemNormallizedPosition(_rectTransform);
 
-            //refreshItems();
-            // var _unit = NormalizedUnitPosition(354);
-            // Managements.Timer.NextFrame(()=>{
-            //     float _normalizedPosition = scrollRect.GetItemNormallizedPosition(_rectTransform);
-            //     Debug.Log(scrollRect.horizontalNormalizedPosition);
-            //     Debug.Log(_normalizedPosition);
-            //     var _mode = UMath.FMode(scrollRect.horizontalNormalizedPosition, _unit);
-            //     scrollRect.horizontalNormalizedPosition = (float)(_normalizedPosition + _mode);
-            //     DOTween.To(()=>scrollRect.horizontalNormalizedPosition,_2=>{
-            //         scrollRect.horizontalNormalizedPosition = _2;
-            //     },_normalizedPosition,0.15f).OnComplete(()=>{
-                    
-            //     });
+            // DOTween.To(()=>scrollRect.horizontalNormalizedPosition,_2=>{
+            //     scrollRect.horizontalNormalizedPosition = _2;
+            // },_normalizedPosition,0.15f).OnComplete(()=>{
+            //     if(OnRetarget!=null){
+            //         OnRetarget(_rectTransform);
+            //     }
             // });
 
         });   

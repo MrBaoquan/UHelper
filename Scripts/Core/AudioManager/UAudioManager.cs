@@ -27,7 +27,6 @@ public class UAudioManager : SingletonBehaviour<UAudioManager>
     public void PlayEffect(AudioClip InEffect, Action<AudioClip> InCallback=null)
     {
         effectAudioSource.PlayOneShot(InEffect);
-        Debug.Log(InEffect.length);
         Observable.Interval(TimeSpan.FromSeconds(InEffect.length+0.1f))
                 .First()
                 .Subscribe(_1=>{

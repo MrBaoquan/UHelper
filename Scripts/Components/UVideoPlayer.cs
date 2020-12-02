@@ -95,6 +95,18 @@ public class UVideoPlayer : MonoBehaviour
     private void Awake() {
         buildRefs();
         syncRenderMode();
+
+        videoPlayer.errorReceived+=(_vp,_error)=>{
+            Debug.LogError(_error);
+        };
+
+        videoPlayer.started += _=>{
+            Debug.Log("UVP: Video started");
+        };
+
+        videoPlayer.frameReady+= (_vp,_frame)=>{
+            Debug.LogFormat("frame {0} ready...",_frame);
+        };
     }
 
     void buildRefs(){
@@ -111,6 +123,7 @@ public class UVideoPlayer : MonoBehaviour
     public void PlayByUrl(string InUrl, VideoPlayer.EventHandler OnReachEndHandler=null, int loop=-1, float StartTime=0, float InEndTime=0)
     {
         videoPlayer.url = InUrl;
+        videoPlayer.Pause();
         this.Play(OnReachEndHandler,loop,StartTime,InEndTime);   
     }
 
@@ -164,6 +177,7 @@ public class UVideoPlayer : MonoBehaviour
         
         if(vpReachEnd!=null){
             videoPlayer.loopPointReached -= vpReachEnd;
+            vpReachEnd = null;
         }
 
         if(vpLoopTimer!=null){
@@ -173,7 +187,6 @@ public class UVideoPlayer : MonoBehaviour
 
         vpReachEnd = _=>{
                 _bSeekCompleted = false;
-                
                 if(_looping){
                     this.SeekTo(_startTime,_3=>{
                         videoPlayer.Play();
@@ -189,7 +202,7 @@ public class UVideoPlayer : MonoBehaviour
                     OnReachEndHandler(videoPlayer);
         };
 
-        vpLoopTimer = Observable.EveryUpdate().Where(_=>_bSeekCompleted).Subscribe(_1=>{
+        vpLoopTimer = Observable.EveryFixedUpdate().Where(_=>_bSeekCompleted).Subscribe(_1=>{
             if(videoPlayer.time<_startTime){
                 _bSeekCompleted = false;
                 this.SeekTo(_startTime,_4=>{
@@ -207,6 +220,7 @@ public class UVideoPlayer : MonoBehaviour
         this.SeekTo(_startTime,_=>{
             _bSeekCompleted = true;
             videoPlayer.loopPointReached += vpReachEnd;
+            Debug.Log("seek completed. begin play.");
             videoPlayer.Play();
         });
     }
@@ -237,6 +251,7 @@ public class UVideoPlayer : MonoBehaviour
     {
         if(vpSeekCompleted!=null){
             videoPlayer.seekCompleted -= vpSeekCompleted;
+            vpSeekCompleted = null;
         }
 
         if(vpSeekTimer!=null){
@@ -247,13 +262,14 @@ public class UVideoPlayer : MonoBehaviour
             videoPlayer.seekCompleted -= vpSeekCompleted;
             vpSeekCompleted = null;
             Func<long,bool> _condition = _2=>{
-                return Mathf.Abs((float)videoPlayer.time-(float)InTime)<0.2f;
+                return Mathf.Abs((float)videoPlayer.time-(float)InTime)<0.02f;
             };
-            vpSeekTimer = Observable.EveryUpdate().Where(_condition).Subscribe(_2=>{
+            vpSeekTimer = Observable.EveryFixedUpdate().Where(_condition).Subscribe(_2=>{
                 videoPlayer.SetDirectAudioMute(0, false);
                 videoPlayer.Pause();
                 vpSeekTimer.Dispose();
-                vpSeekTimer = null;    
+                vpSeekTimer = null;   
+                Debug.LogFormat("seek to {0} completed", InTime) ;
                 if(InSeekedHandler != null)
                     InSeekedHandler(videoPlayer);
             });
@@ -262,9 +278,11 @@ public class UVideoPlayer : MonoBehaviour
         videoPlayer.SetDirectAudioMute(0, true);
         videoPlayer.seekCompleted += vpSeekCompleted;
         videoPlayer.time = InTime;
+
         if(!videoPlayer.isPlaying){
             videoPlayer.Play();
         }
+        
     }
 
     public void Play()
@@ -272,7 +290,6 @@ public class UVideoPlayer : MonoBehaviour
         if(videoPlayer!=null){
             videoPlayer.Play();
         }
-
     }
 
     public void Stop()

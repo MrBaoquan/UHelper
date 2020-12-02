@@ -286,7 +286,7 @@ class USocket
         }
         catch (System.Exception e)
         {
-            //Debug.LogError(e.Message);
+            Debug.LogWarning(e.Message);
             DisConnect(tcpClient);
         }
         return 0;
