@@ -65,7 +65,7 @@ public class UVideoPlayer : MonoBehaviour
         if(InTexture == null){
             var _renderer = this.GetComponent<RawImage>();
             if(_renderer==null){
-                Debug.Log("There is no renderer component. from Render2Texture");
+                Debug.Log("UVP:There is no renderer component. from Render2Texture");
                 return;
             }
 
@@ -85,7 +85,7 @@ public class UVideoPlayer : MonoBehaviour
         if(InRenderer==null){
             InRenderer = this.GetComponent<Renderer>();
             if(InRenderer==null){
-                Debug.LogWarning("There is no renderer component. from Render2Material");
+                Debug.LogWarning("UVP: There is no renderer component. from Render2Material");
                 return;
             }
         }
@@ -100,13 +100,9 @@ public class UVideoPlayer : MonoBehaviour
             Debug.LogError(_error);
         };
 
-        videoPlayer.started += _=>{
-            Debug.Log("UVP: Video started");
-        };
-
-        videoPlayer.frameReady+= (_vp,_frame)=>{
-            Debug.LogFormat("frame {0} ready...",_frame);
-        };
+        // videoPlayer.frameReady+= (_vp,_frame)=>{
+        //     Debug.LogFormat("frame {0} ready...",_frame);
+        // };
     }
 
     void buildRefs(){
@@ -123,7 +119,6 @@ public class UVideoPlayer : MonoBehaviour
     public void PlayByUrl(string InUrl, VideoPlayer.EventHandler OnReachEndHandler=null, int loop=-1, float StartTime=0, float InEndTime=0)
     {
         videoPlayer.url = InUrl;
-        videoPlayer.Pause();
         this.Play(OnReachEndHandler,loop,StartTime,InEndTime);   
     }
 
@@ -156,7 +151,7 @@ public class UVideoPlayer : MonoBehaviour
     private void realPlay(VideoPlayer.EventHandler OnReachEndHandler=null, int loop=-1, float StartTime=0, float InEndTime=0)
     {
         if(!videoPlayer.isPrepared){
-            Debug.LogWarning("video source is not prepared.");
+            Debug.LogWarning("UVP: video source is not prepared.");
             OnReachEndHandler(videoPlayer);
             return;
         }
@@ -170,7 +165,7 @@ public class UVideoPlayer : MonoBehaviour
         bool _bSeekCompleted = false;
 
         if(InEndTime>0){
-            _endTime = Mathf.Min(InEndTime,(float)videoPlayer.length) - 0.2f;
+            _endTime = Mathf.Min(InEndTime,(float)videoPlayer.length) - 0.05f;
         }else{
             _endTime = videoPlayer.length;
         }
@@ -189,11 +184,18 @@ public class UVideoPlayer : MonoBehaviour
                 _bSeekCompleted = false;
                 if(_looping){
                     this.SeekTo(_startTime,_3=>{
-                        videoPlayer.Play();
+                        if(!videoPlayer.isPlaying){
+                            //Debug.Log("UVP: Play video by Play 1");
+                            videoPlayer.Play();
+                        }
                         _bSeekCompleted = true;
                     });
                 }else{
-                    videoPlayer.Pause();
+                    //Debug.LogFormat("UVP: from start {0} reach end point:{1}, stopped", _startTime, _endTime);
+                    if(videoPlayer.isPlaying){
+                        //Debug.Log("UVP: Pause video P1");
+                        videoPlayer.Pause();    
+                    }
                     vpLoopTimer.Dispose();
                     videoPlayer.loopPointReached -= vpReachEnd;
                     vpLoopTimer = null;
@@ -205,8 +207,13 @@ public class UVideoPlayer : MonoBehaviour
         vpLoopTimer = Observable.EveryFixedUpdate().Where(_=>_bSeekCompleted).Subscribe(_1=>{
             if(videoPlayer.time<_startTime){
                 _bSeekCompleted = false;
+                //Debug.Log("UVP: Seek to startTime P2");
                 this.SeekTo(_startTime,_4=>{
                     _bSeekCompleted = true;
+                    if(!videoPlayer.isPlaying){
+                        //Debug.Log("UVP: Play video by Play 4");
+                        videoPlayer.Play();
+                    }
                 });
                 return;
             }
@@ -217,10 +224,11 @@ public class UVideoPlayer : MonoBehaviour
         });
         //Debug.LogFormat("Prepared:{0}, Paused:{1}, Playing:{2} ",videoPlayer.isPrepared,videoPlayer.isPaused,videoPlayer.isPlaying);
 
+        //Debug.Log("UVP: Seek to startTime P1");
         this.SeekTo(_startTime,_=>{
             _bSeekCompleted = true;
-            videoPlayer.loopPointReached += vpReachEnd;
-            Debug.Log("seek completed. begin play.");
+            videoPlayer.loopPointReached += vpReachEnd;        
+            //Debug.Log("UVP: Play video by Play 2");
             videoPlayer.Play();
         });
     }
@@ -229,7 +237,7 @@ public class UVideoPlayer : MonoBehaviour
     public void Prepare(VideoPlayer.EventHandler OnPrepared=null)
     {
         if(videoPlayer==null){
-            Debug.LogWarning("null reference of videoPlayer");
+            Debug.LogWarning("UVP: null reference of videoPlayer");
         }
         
         if(vpPreapared!=null){
@@ -262,16 +270,21 @@ public class UVideoPlayer : MonoBehaviour
             videoPlayer.seekCompleted -= vpSeekCompleted;
             vpSeekCompleted = null;
             Func<long,bool> _condition = _2=>{
-                return Mathf.Abs((float)videoPlayer.time-(float)InTime)<0.02f;
+                return Mathf.Abs((float)videoPlayer.time-(float)InTime)<=0.05f;
             };
             vpSeekTimer = Observable.EveryFixedUpdate().Where(_condition).Subscribe(_2=>{
                 videoPlayer.SetDirectAudioMute(0, false);
-                videoPlayer.Pause();
+                if(videoPlayer.isPlaying){
+                    //Debug.Log("UVP: Pause video by Seek()");
+                    videoPlayer.Pause();
+                }
                 vpSeekTimer.Dispose();
                 vpSeekTimer = null;   
-                Debug.LogFormat("seek to {0} completed", InTime) ;
-                if(InSeekedHandler != null)
+                //Debug.LogFormat("UVP: seek to {0} completed", InTime) ;
+                if(InSeekedHandler != null){
+                   // Debug.Log("UVP: callback seek completed.");
                     InSeekedHandler(videoPlayer);
+                }
             });
         };
 
@@ -280,6 +293,7 @@ public class UVideoPlayer : MonoBehaviour
         videoPlayer.time = InTime;
 
         if(!videoPlayer.isPlaying){
+            //Debug.Log("UVP: Play video by Play 3");
             videoPlayer.Play();
         }
         

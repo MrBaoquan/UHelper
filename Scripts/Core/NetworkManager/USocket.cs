@@ -40,7 +40,8 @@ class USocket
     public bool Connected{
         get{
             if(tcpClient==null) return false;
-            return  !tcpClient.Poll(0,SelectMode.SelectRead)&&tcpClient.Available==0;
+            //Debug.LogFormat("============{0}============={1}=============",tcpClient.Connected,!tcpClient.Poll(0,SelectMode.SelectRead)&&tcpClient.Available==0);
+            return  !tcpClient.Poll(0,SelectMode.SelectRead)&&tcpClient.Available==0&&tcpClient.Connected;
         }
     }
 

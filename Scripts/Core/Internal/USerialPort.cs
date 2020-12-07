@@ -30,7 +30,15 @@ class USerialPort
         serialPort.WriteTimeout = 500;
         serialPort.DataBits = 8;
         serialPort.StopBits = StopBits.One;
-        serialPort.Open();
+        try
+        {
+            serialPort.Open();    
+        }
+        catch (System.Exception)
+        {
+            Debug.LogWarningFormat("open {0} failed", InPortName);
+        }
+        
     }
 
     private byte[] tempBuffer = new byte[4096];

@@ -40,6 +40,11 @@ public class UAudioManager : SingletonBehaviour<UAudioManager>
         PlayEffect(_clip,InCallback);
     }
 
+    public void StopEffect()
+    {
+        effectAudioSource.Stop();
+    }
+
 
     private AudioSource musicAudioSource;
     private AudioSource effectAudioSource;
