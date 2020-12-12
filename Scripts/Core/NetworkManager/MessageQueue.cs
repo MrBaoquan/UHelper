@@ -1,3 +1,4 @@
+using System.Net.Sockets;
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
@@ -9,12 +10,28 @@ namespace UHelper
 
 public class UMessage : UEvent
 {
+    public string IP = string.Empty;
+    public int Port = -1;
     public byte[] RawData = null;
+
+    public string ConnectionKey{
+        get{
+            return string.Format("{0}_{1}", IP, Port);
+        }
+    }
+}
+
+public enum NetProtocol
+{
+    Unknown = -1,
+    Tcp = 6,
+    Udp = 17
 }
 
 public class NetMessage : UEvent
 {
     public UMessage Message;
+    public NetProtocol Protocol = NetProtocol.Tcp;
 }
 
 public class MessageQueeue

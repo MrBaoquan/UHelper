@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 namespace UHelper
 {
@@ -19,6 +20,14 @@ public static class UConverter
             handle.Free();
         }
         return _instance;
+    }
+
+    public static string ToHexString(this byte[] InData, bool bWithDash=true){
+        var _hexString = BitConverter.ToString(InData);
+        if(!bWithDash){
+            _hexString = _hexString.Replace("-",string.Empty);
+        }
+        return _hexString;
     }
 
     public static void BGR2RGB(ref byte[] buffer) {

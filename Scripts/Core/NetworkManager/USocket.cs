@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Text;
 
 using System;
@@ -8,77 +9,111 @@ using System.Net.Sockets;
 using UnityEngine;
 
 using UniRx;
-using Google.Protobuf;
-using Google.Protobuf.Reflection;
-
 namespace  UHelper
 {
 
-
-public class StateObject {  
-    // Client  socket.  
-    public Socket workSocket = null;  
-    // Size of receive buffer.  
-    public const int BufferSize = 1024;  
-    // Receive buffer.  
-    public byte[] buffer = new byte[BufferSize];  
-// Received data string.  
-    public StringBuilder sb = new StringBuilder();
+public class UNetConnectedEvent:UEvent{
+    public USocket Socket = null;
+    public string IP = string.Empty;
+    public int Port = -1;
+    public string Key{
+        get{
+            return string.Format("{0}_{1}", IP, Port);
+        }
+    }
+}
+public class UNetDisconnectedEvent:UEvent{
+    public USocket Socket = null;
+    public string IP = string.Empty;
+    public int Port = -1;
+    public string Key{
+        get{
+            return string.Format("{0}_{1}", IP, Port);
+        }
+    }
 }
 
-public class UNetConnectedEvent:UEvent{}
-public class UNetDisconnectedEvent:UEvent{}
-
-class USocket
+public class USocket
 {
     private MessageQueeue recvMessageQueue = new MessageQueeue();
-    private MessageQueeue messageDispatcher = new MessageQueeue();
+    private MessageQueeue tcpMessageDispatcher = new MessageQueeue();
+    private MessageQueeue udpMessageDispatcher = new MessageQueeue();
     public MessageQueeue Messages{
         get {return recvMessageQueue;}
     }
 
+    private bool connected = false;
     public bool Connected{
         get{
             if(tcpClient==null) return false;
-            //Debug.LogFormat("============{0}============={1}=============",tcpClient.Connected,!tcpClient.Poll(0,SelectMode.SelectRead)&&tcpClient.Available==0);
-            return  !tcpClient.Poll(0,SelectMode.SelectRead)&&tcpClient.Available==0&&tcpClient.Connected;
+            return connected;
+            // var _condition1 = !tcpClient.Poll(0,SelectMode.SelectRead);
+            // var _condition2 = tcpClient.Available == 0;
+            // var _condition3 = tcpClient.Connected;
         }
     }
 
     private bool available = true;
-
     private Socket tcpClient;
+    private IPEndPoint endPoint;
+    public string Key{
+        get{
+            return string.Format("{0}_{1}",endPoint.Address.ToString(),endPoint.Port);
+        }
+    }
     public bool Connect(string InIP,int InPort)
     {
         IPAddress _ip = IPAddress.Parse(InIP);
-        IPEndPoint _endPoint = new IPEndPoint(_ip, InPort);
-        bool _result = Connect(_endPoint);
-        bool _reconnecting = false;
-        Observable.Interval(TimeSpan.FromMilliseconds(1000)).Where((_1,_2)=>!Connected&&!_reconnecting).Subscribe(_3=>{
-            Debug.Log("重连中...");
-            _reconnecting = true;
-            Observable.Timer(TimeSpan.FromSeconds(3.0f)).Subscribe(_4=>_reconnecting = false);
-            DisConnect(tcpClient);
-            Connect(_endPoint);
+        this.endPoint = new IPEndPoint(_ip, InPort);
+        bool _result = Connect(endPoint);
+
+        Observable.Interval(TimeSpan.FromMilliseconds(3000)).Where((_1,_2)=>tcpClientReuse&&!Connected).Subscribe(_3=>{
+            Debug.Log("Reconnecting...");
+            destroySocket(tcpClient);
+            Connect(endPoint);
         });
-        dispatchMessage();
+        dispatchTcpMessages();
         return _result;
     }
 
-    private void dispatchMessage(){
-        Observable.EveryUpdate().Subscribe(_=>{
-            var _message = messageDispatcher.PopMessage();
-            while(_message!=null){
-                Managements.Event.Fire(new NetMessage{Message = _message});
-                _message = messageDispatcher.PopMessage();
+    UdpClient udpClient;
+    CancellationTokenSource udpClientTokenSource = new CancellationTokenSource();
+    public void ListenUDP(string InIP, int InPort, bool bEnableBroadcast=true)
+    {
+        if(udpClient!=null) return;
+        udpClient = new UdpClient(new IPEndPoint(IPAddress.Parse(InIP), InPort));
+        var _ip = (udpClient.Client.LocalEndPoint as IPEndPoint);
+        Debug.LogFormat("Udp server listen at: {0}:{1}", _ip.Address.ToString(), _ip.Port);
+        udpClient.EnableBroadcast = bEnableBroadcast;
+        var _task = Task.Factory.StartNew(()=>{
+            while (!udpClientTokenSource.IsCancellationRequested)
+            {
+                IPEndPoint _endPoint = null;
+                try
+                {
+                    byte[] _buffer = udpClient.Receive(ref _endPoint);
+                    udpMessageDispatcher.PushMessage(new UMessage{RawData=_buffer,IP=_endPoint.Address.ToString(),Port=_endPoint.Port});
+                }catch (System.Exception e)
+                {
+                    UnityEngine.Debug.LogError(e.Message);
+                }
             }
-        });
+        },TaskCreationOptions.LongRunning);
+
+        dispatchUdpMessages();
+    }
+
+    public void Broadcast(byte[] InData, int InPort)
+    {
+        if(udpClient==null) return;
+        udpClient.Send(InData, InData.Length, new IPEndPoint(IPAddress.Parse("255.255.255.255"), InPort));
     }
 
 
     private Type MsgReceiver = null;
     public void SetMessageReceiver(Type T)
     {
+        if(T==null) return;
         if(!T.IsSubclassOf(typeof(UMessageReceiver))){
             Debug.LogWarning("not a valid class");
             return;
@@ -86,124 +121,153 @@ class USocket
         MsgReceiver = T;
     }
 
+    // Tcp Client 发送消息
+    public int Send(byte[] InData)
+    {
+        if (tcpClient == null || !Connected)
+        {
+            return 0;
+        }
+        try
+        {
+            return tcpClient.Send(InData);    
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning(e.Message);
+            DisConnect(true);
+            //DisConnect(tcpClient);
+        }
+        return 0;
+    }
+
+
+
+    /// <summary>
+    /// Private Methods
+    /// </summary>
+
+    private void dispatchTcpMessages(){
+        Observable.EveryUpdate().Subscribe(_=>{
+            var _message = tcpMessageDispatcher.PopMessage();
+            while(_message!=null){
+                Managements.Event.Fire(new NetMessage{Message = _message, Protocol=NetProtocol.Tcp});
+                _message = tcpMessageDispatcher.PopMessage();
+            }
+        });
+    }
+
+    private void dispatchUdpMessages(){
+        Observable.EveryUpdate().Subscribe(_=>{
+            var _message = udpMessageDispatcher.PopMessage();
+            while(_message!=null){
+                Managements.Event.Fire(new NetMessage{Message = _message, Protocol=NetProtocol.Udp});
+                _message = udpMessageDispatcher.PopMessage();
+            }
+        });
+    }
+
     private bool Connect(IPEndPoint InEndPoint)
     {
         tcpClient = new Socket(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.Tcp);
-        
+        Observable.Start(()=>{
+            try
+            {
+                tcpClient.Connect(InEndPoint);
+                return true;
+            }
+            catch(Exception e)
+            {
+                Debug.Log(e.Message);
+                Debug.Log(e.StackTrace);
+                return false;
+            }
+        }).ObserveOnMainThread().Subscribe(_=>{
+            Debug.LogFormat("connect result: {0}",_);
+            if(!_) return;
+            connected = true;
+            var _endPoint = tcpClient.RemoteEndPoint as IPEndPoint;
+            Managements.Event.Fire(new UNetConnectedEvent{IP=_endPoint.Address.ToString(), Port = _endPoint.Port, Socket=this});
+            startNewReceiver(tcpClient);
+        });
 
-            Observable.Start(()=>{
-                try
-                {
-                    tcpClient.Connect(InEndPoint);
-                    return true;
-                }
-                catch(Exception e)
-                {
-                    Debug.Log(e.Message);
-                    return false;
-                }
-            }).ObserveOnMainThread().Subscribe(_=>{
-                Debug.LogFormat("connect result: {0}",_);
-                if(!_) return;
-                Managements.Event.Fire(new UNetConnectedEvent{});
-                startNewReceiver(tcpClient);
-            });
-
-            // tcpClient.BeginConnect(InEndPoint,_result=>{
-            //     tcpClient.EndConnect(_result);
-            // },null);
-
-            // 3秒后还没连上  要准备重连
-            Managements.Timer.SetTimeout(3.0f,()=>{
-                if(!tcpClient.Connected){
-                    DisConnect(tcpClient);
-                }
-            });
         return true;
     }
 
-    private bool DisConnect(Socket InSocket){
-        if(InSocket==null) return false;
+
+    private void destroySocket(Socket InSocket)
+    {
+        if(InSocket==null) return;
         try
         {
-            Managements.Event.Fire(new UNetDisconnectedEvent());
-            tcpClient.Shutdown(SocketShutdown.Both);
-            tcpClient.Disconnect(false);
-            tcpClient.Close();
-            tcpClient = null;
+            if(InSocket.Connected){
+                InSocket.Shutdown(SocketShutdown.Both);
+                InSocket.Disconnect(false);
+            }
+            
+            InSocket.Close();
+            InSocket.Dispose();     
         }
-        catch (System.Exception)
+        catch (System.Exception e)
         {
+            Debug.LogWarning(e.Message);
         }
+        InSocket = null;
+    }
+
+    private bool tcpClientReuse = true;
+    public bool DisConnect(bool bReuse=false){
+        tcpClientReuse = false;
+        if(connected){
+            connected = false;
+            Managements.Event.Fire(new UNetDisconnectedEvent{IP=endPoint.Address.ToString(), Port = endPoint.Port, Socket=this});
+        }
+        if(!bReuse){
+            destroySocket(tcpClient);
+            Dispose();
+        }
+        tcpClientReuse = bReuse;
         return true;
     }
 
     public static string data = null;  
     private Socket tcpServer = null;
     private Thread listenThread = null;
-
-    // State object for reading client data asynchronously  
-    public class StateObject {  
-        // Client  socket.  
-        public Socket workSocket = null;  
-        // Size of receive buffer.  
-        public const int BufferSize = 1024;  
-        // Receive buffer.  
-        public byte[] buffer = new byte[BufferSize];  
-    // Received data string.  
-        public StringBuilder sb = new StringBuilder();
-
-        public byte[] RawTypeSize = new byte[32];
-        public byte[] RawDataSize = new byte[32];
-
-        public byte[] RawTypeName = null;
-        public string TypeName;
-        public byte[] RawData = null;
-
-        // 当前读取到第几步 
-        public int Step = -1;
-    }  
-
     private ManualResetEvent tcpServerAllDone = new ManualResetEvent(false); 
     private Dictionary<string,Socket> allClients  = new Dictionary<string, Socket>();
     public bool Listen(string InIP="127.0.0.1",int InPort=6666) 
     {  
-        // Establish the local endpoint for the socket.  
-        // The DNS name of the computer  
-        // running the listener is "host.contoso.com".
         IPAddress ipAddress = IPAddress.Parse(InIP);
         IPEndPoint localEndPoint = new IPEndPoint(ipAddress, InPort);
 
         // Create a TCP/IP socket.  
-        Socket listener = new Socket(ipAddress.AddressFamily,  
+        tcpServer = new Socket(ipAddress.AddressFamily,  
             SocketType.Stream, ProtocolType.Tcp );  
 
         // Bind the socket to the local endpoint and listen for incoming connections.  
         try {  
-            listener.Bind(localEndPoint);  
-            listener.Listen(100);  
+            tcpServer.Bind(localEndPoint);  
+            tcpServer.Listen(100);  
             listenThread = new Thread(()=>{
                 while (available) {  
                     // Set the event to nonsignaled state.  
                     tcpServerAllDone.Reset();  
                     // Start an asynchronous socket to listen for connections.  
                     Debug.Log("Waiting for a connection...");  
-                    listener.BeginAccept(
+                    tcpServer.BeginAccept(
                         new AsyncCallback(AcceptCallback),  
-                        listener );  
+                        tcpServer );  
 
-                    // Wait until a connection is made before continuing.  
                     tcpServerAllDone.WaitOne();  
                 }  
             });
             listenThread.Start();
-            dispatchMessage();
+            dispatchTcpMessages();
             return true;
         } catch (Exception e) {  
             Debug.Log(e.ToString());  
             return false;
         } 
-
     }  
 
     private string getClientKey(Socket InClient)
@@ -231,41 +295,37 @@ class USocket
 
     public List<UMessageReceiver> messageReceivers = new List<UMessageReceiver>();
     private void startNewReceiver(Socket InSocket){
+        if(MsgReceiver==null) return;
         UMessageReceiver _receiver = Activator.CreateInstance(MsgReceiver) as UMessageReceiver;
         messageReceivers.Add(_receiver);
-        _receiver.Prepare(InSocket,messageDispatcher);
+        _receiver.Prepare(InSocket, tcpMessageDispatcher);
     }
   
-    private void Send(Socket handler, byte[] InData) {    
+    private void SendAsync(Socket handler, byte[] InData) {    
         handler.BeginSend(InData, 0, InData.Length, 0,  
             new AsyncCallback(SendCallback), handler);  
     }
 
     private void SendCallback(IAsyncResult ar) {  
-        try {  
-            // Retrieve the socket from the state object.  
+        try {
             Socket handler = (Socket) ar.AsyncState;  
-            // Complete sending the data to the remote device.  
-            int bytesSent = handler.EndSend(ar);  
-            //handler.Shutdown(SocketShutdown.Both);  
-            //handler.Close();  
+            int bytesSent = handler.EndSend(ar);
   
         } catch (Exception e) {  
             Debug.Log(e.ToString());  
         }  
     }  
 
-    private Dictionary<string,Socket> _disconnectedClients = new Dictionary<string, Socket>();
     public void SendAll(byte[] InDatas)
     {
-        
+        Dictionary<string,Socket> _disconnectedClients = new Dictionary<string, Socket>();    
         foreach (var _client in allClients)
         {
             if(!_client.Value.Connected){
                 _disconnectedClients.Add(_client.Key,_client.Value);
                 continue;
             }
-            this.Send(_client.Value,InDatas);
+            this.SendAsync(_client.Value,InDatas);
         }
 
         foreach(var _client in _disconnectedClients){
@@ -275,27 +335,9 @@ class USocket
         _disconnectedClients.Clear();
     }
 
-    public int Send(byte[] InData)
-    {
-        if (tcpClient == null)
-        {
-            return 0;
-        }
-        try
-        {
-            return tcpClient.Send(InData);    
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning(e.Message);
-            DisConnect(tcpClient);
-        }
-        return 0;
-    }
-
     public void Dispose()
     {
-
+        udpClientTokenSource.Cancel();
         messageReceivers.ForEach(_receiver=>{
             _receiver.Dispose();
         });
@@ -306,6 +348,8 @@ class USocket
             listenThread.Abort();
         }
     }
+
+    
 
 }
     

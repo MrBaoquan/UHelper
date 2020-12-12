@@ -53,6 +53,10 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
         // 5. 初始化Timer管理类
         UTimerManager.Instance.Initialize();
 
+        // 6. 初始化网络模块
+        UNetManager.Instance.Initialize();
+
+
         this.Initialize();
     }
 

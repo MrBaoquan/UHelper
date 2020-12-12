@@ -57,6 +57,27 @@ public class UTimerManager : Singleton<UTimerManager>,Manageable
         };
     }
 
+    public Action Debounce(float InTime, Action InCallback)
+    {
+        IDisposable _timerHandler = null;
+        float _lastCallTime =Time.time;
+        Func<long,bool> _condition = _=>{
+            //Debug.LogFormat("count time:{0}", Time.time - _lastCallTime);
+            return (Time.time - _lastCallTime)>=InTime;
+        };
+
+        _timerHandler = Observable.EveryUpdate()
+                .Where(_condition)
+                .Subscribe(_=>{
+                    _lastCallTime = Time.time;
+                    InCallback();
+                });
+
+        return ()=>{
+            _lastCallTime = Time.time;
+        };
+    }
+
     public void NextFrame(Action InAction){
         Observable.NextFrame().Subscribe(_=>{
             if(InAction!=null) InAction();
