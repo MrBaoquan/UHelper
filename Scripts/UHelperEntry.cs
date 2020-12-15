@@ -24,6 +24,7 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
     private void Awake() 
     {
         Debug.Log("UHelper.Awake");
+        Debug.Log(typeof(UnityEngine.Video.VideoClip));
         if(UHelperEntry.Instance!=this){
             GameObject.Destroy(this);
             return;

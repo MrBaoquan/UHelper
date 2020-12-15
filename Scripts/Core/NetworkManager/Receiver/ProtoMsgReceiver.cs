@@ -8,7 +8,7 @@ using System.Net.Sockets;
 namespace UHelper
 {
 
-    public class PBMessagerReceiver : UMessageReceiver
+    public class ProtoMsgReceiver : UNetMsgReceiver
     {
         public class PBMessage : UMessage
         {

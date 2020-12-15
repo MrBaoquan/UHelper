@@ -100,6 +100,10 @@ public class UVideoPlayer : MonoBehaviour
             Debug.LogError(_error);
         };
 
+        videoPlayer.started+=(_)=>{
+            Debug.LogFormat("UVP_{0} ============== Started: {1}", UnityEngine.Time.time, videoPlayer.time);
+        };
+
         // videoPlayer.frameReady+= (_vp,_frame)=>{
         //     Debug.LogFormat("frame {0} ready...",_frame);
         // };
@@ -118,16 +122,19 @@ public class UVideoPlayer : MonoBehaviour
      */
     public void PlayByUrl(string InUrl, VideoPlayer.EventHandler OnReachEndHandler=null, int loop=-1, float StartTime=0, float InEndTime=0)
     {
+        Debug.LogFormat("UVP_{0} ========== request Play by url: {1}", UnityEngine.Time.time, videoPlayer.time);
         videoPlayer.url = InUrl;
         this.Play(OnReachEndHandler,loop,StartTime,InEndTime);   
     }
 
     public void Play(VideoClip InClip, VideoPlayer.EventHandler OnReachEndHandler=null, int loop=-1, float StartTime=0, float InEndTime=0){
+        Debug.LogFormat("UVP_{0} ========== request Play by clip: {1}", UnityEngine.Time.time, videoPlayer.time);
         videoPlayer.clip = InClip;
         Play(OnReachEndHandler,loop,StartTime,InEndTime);
     }
 
     public void Prepare(VideoClip InClip, VideoPlayer.EventHandler OnPrepared=null){
+        Debug.LogFormat("UVP_{0} ========== request prepare clip: {1}", UnityEngine.Time.time, videoPlayer.time);
         videoPlayer.clip = InClip;
         this.Prepare(_=>{
             this.SeekTo(0f,OnPrepared);
@@ -150,6 +157,8 @@ public class UVideoPlayer : MonoBehaviour
 
     private void realPlay(VideoPlayer.EventHandler OnReachEndHandler=null, int loop=-1, float StartTime=0, float InEndTime=0)
     {
+        Debug.LogFormat("UVP_{0} ========== request real play", UnityEngine.Time.time);
+        double _originTime = UnityEngine.Time.time;
         if(!videoPlayer.isPrepared){
             Debug.LogWarning("UVP: video source is not prepared.");
             OnReachEndHandler(videoPlayer);
@@ -181,6 +190,7 @@ public class UVideoPlayer : MonoBehaviour
         }
 
         vpReachEnd = _=>{
+                Debug.LogFormat("到达视频结尾:{0}",Time);
                 _bSeekCompleted = false;
                 if(_looping){
                     this.SeekTo(_startTime,_3=>{
@@ -204,7 +214,7 @@ public class UVideoPlayer : MonoBehaviour
                     OnReachEndHandler(videoPlayer);
         };
 
-        vpLoopTimer = Observable.EveryFixedUpdate().Where(_=>_bSeekCompleted).Subscribe(_1=>{
+        vpLoopTimer = Observable.EveryUpdate().Where(_=>_bSeekCompleted).Subscribe(_1=>{
             if(videoPlayer.time<_startTime){
                 _bSeekCompleted = false;
                 //Debug.Log("UVP: Seek to startTime P2");
@@ -228,7 +238,7 @@ public class UVideoPlayer : MonoBehaviour
         this.SeekTo(_startTime,_=>{
             _bSeekCompleted = true;
             videoPlayer.loopPointReached += vpReachEnd;        
-            //Debug.Log("UVP: Play video by Play 2");
+            Debug.Log("UVP: Play video by seek completed");
             videoPlayer.Play();
         });
     }
@@ -236,6 +246,7 @@ public class UVideoPlayer : MonoBehaviour
     private VideoPlayer.EventHandler vpPreapared = null;
     public void Prepare(VideoPlayer.EventHandler OnPrepared=null)
     {
+        Debug.LogFormat("UVP_{0} ==========  request prepare", UnityEngine.Time.time, videoPlayer.time);
         if(videoPlayer==null){
             Debug.LogWarning("UVP: null reference of videoPlayer");
         }
@@ -246,6 +257,7 @@ public class UVideoPlayer : MonoBehaviour
         }
 
         vpPreapared = _=>{
+            Debug.LogFormat("UVP_{0} ==========  prepare  completed: {1}", UnityEngine.Time.time, videoPlayer.time);
             if(OnPrepared!=null)
                 OnPrepared(videoPlayer);
             videoPlayer.prepareCompleted-=vpPreapared;
@@ -255,8 +267,9 @@ public class UVideoPlayer : MonoBehaviour
     }
     private VideoPlayer.EventHandler vpSeekCompleted = null;
     private IDisposable vpSeekTimer = null;
-    public void SeekTo(double InTime,VideoPlayer.EventHandler InSeekedHandler=null)
+    public void SeekTo(double InTime, VideoPlayer.EventHandler InSeekedHandler=null)
     {
+        
         if(vpSeekCompleted!=null){
             videoPlayer.seekCompleted -= vpSeekCompleted;
             vpSeekCompleted = null;
@@ -266,13 +279,26 @@ public class UVideoPlayer : MonoBehaviour
             vpSeekTimer.Dispose();
         }
 
+        double _originDelta = videoPlayer.time - InTime;
+        Func<long,bool> _condition = _2=>{
+            var _curDelta = videoPlayer.time - InTime;
+            bool _reachEnd = _curDelta>=0;
+            return _reachEnd;
+        };
+        if(videoPlayer.time>InTime){
+            _condition = _2=>{
+                var _curDelta = videoPlayer.time - InTime;
+                bool _reachEnd = _curDelta>=0&&_curDelta<_originDelta;
+                return _reachEnd;
+            };
+        }
+        double _originGameTime = UnityEngine.Time.time;
+        Debug.LogFormat("UVP_{0}:========= start seek ",UnityEngine.Time.time, UnityEngine.Time.time - _originGameTime);
         vpSeekCompleted = _=>{
+            Debug.LogFormat("UVP_{0}:=========Seek complted delta 1: {1}",UnityEngine.Time.time, UnityEngine.Time.time - _originGameTime);
             videoPlayer.seekCompleted -= vpSeekCompleted;
             vpSeekCompleted = null;
-            Func<long,bool> _condition = _2=>{
-                return Mathf.Abs((float)videoPlayer.time-(float)InTime)<=0.05f;
-            };
-            vpSeekTimer = Observable.EveryFixedUpdate().Where(_condition).Subscribe(_2=>{
+            vpSeekTimer = Observable.EveryUpdate().Where(_condition).Subscribe(_2=>{
                 videoPlayer.SetDirectAudioMute(0, false);
                 if(videoPlayer.isPlaying){
                     //Debug.Log("UVP: Pause video by Seek()");
@@ -280,7 +306,7 @@ public class UVideoPlayer : MonoBehaviour
                 }
                 vpSeekTimer.Dispose();
                 vpSeekTimer = null;   
-                //Debug.LogFormat("UVP: seek to {0} completed", InTime) ;
+                Debug.LogFormat("UVP_{0}:=========Seek complted delta 2: {1}",UnityEngine.Time.time, UnityEngine.Time.time - _originGameTime);
                 if(InSeekedHandler != null){
                    // Debug.Log("UVP: callback seek completed.");
                     InSeekedHandler(videoPlayer);
