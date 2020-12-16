@@ -117,16 +117,7 @@ public class UIManager : Singleton<UIManager>,Manageable
     public T ShowUI<T>(Action<T> InHandler=null) where T : UIBase
     {
         string _uiKey = typeof(T).Name;
-        UIBase _uiComponent = null;
-        if(!allSpawnedUICaches.TryGetValue(_uiKey, out _uiComponent)){
-            Debug.LogWarningFormat("Show ui {0} failed. UI {0} not exits.",_uiKey);
-            return null;
-        }
-        ShowUI(_uiKey,_uiComponent);
-        if(InHandler!=null){
-            InHandler(_uiComponent as T);
-        }
-        return _uiComponent as T;
+        return ShowUI<T>(_uiKey,InHandler);
     }
 
     public T ShowUI<T>(string InKey, Action<T> InHandler=null) where T : UIBase
@@ -140,17 +131,6 @@ public class UIManager : Singleton<UIManager>,Manageable
         if(InHandler!=null){
             InHandler(_uiComponent as T);
         }
-        return _uiComponent as T;
-    }
-
-    public T ShowUI<T>(string InKey) where T : UIBase
-    {
-        UIBase _uiComponent = null;
-        if(!allSpawnedUICaches.TryGetValue(InKey, out _uiComponent)){
-            Debug.LogWarningFormat("Show ui {0} failed. UI {0} not exits.",InKey);
-            return null;
-        }
-        ShowUI(InKey,_uiComponent);
         return _uiComponent as T;
     }
 
@@ -178,13 +158,23 @@ public class UIManager : Singleton<UIManager>,Manageable
         return _uiComponent as T;
     }
 
-    public void HideUI(string InKey)
+
+    public T HideUI<T>(Action<T> InHandler=null) where T : UIBase
     {
+        string _key = typeof(T).Name;
+        return HideUI<T>(_key,InHandler);
+    }
+
+    public T HideUI<T>(string InKey, Action<T> InHandler=null) where T : UIBase
+    {
+        if(InKey == ""){
+            InKey = typeof(T).Name;
+        }
         UIBase _uiComponent;
         if(!allSpawnedUICaches.TryGetValue(InKey, out _uiComponent))
         {
             Debug.LogWarningFormat("Hide ui {0} failed. UI {0} not exits.",InKey);
-            return;
+            return null;
         }
         UIType _uiType = _uiComponent.Type;
         switch(_uiType)
@@ -199,7 +189,13 @@ public class UIManager : Singleton<UIManager>,Manageable
                 hidePopupUI(InKey);
                 break;
         }
+        if(InHandler!=null)
+            InHandler(_uiComponent as T);
+        return _uiComponent as T;
+    }
 
+    public void HideUI(string InKey){
+        HideUI<UIBase>(InKey);
     }
 
     // 对话框类
@@ -335,7 +331,7 @@ public class UIManager : Singleton<UIManager>,Manageable
         if(!normalUIs.TryGetValue(InKey, out _uiComponent)){
             return;
         }
-        _uiComponent.Hidden();
+        _uiComponent.Hide();
         normalUIs.Remove(InKey);
     }
 
@@ -343,7 +339,7 @@ public class UIManager : Singleton<UIManager>,Manageable
     {
         UIBase _uiComponent = allSpawnedUICaches[InKey];
         foreach(var _uiItem in standaloneUIs){
-            _uiItem.Value.Hidden();
+            _uiItem.Value.Hide();
         }
         _uiComponent.Show();
         if (!standaloneUIs.Keys.Contains(InKey))
@@ -359,7 +355,7 @@ public class UIManager : Singleton<UIManager>,Manageable
         if(!standaloneUIs.TryGetValue(InKey,out _uiComponent)){
             return;
         }
-        _uiComponent.Hidden();
+        _uiComponent.Hide();
         standaloneUIs.Remove(InKey);
 
         var _last = standaloneUIs.LastOrDefault();
@@ -399,7 +395,7 @@ public class UIManager : Singleton<UIManager>,Manageable
         if(!popupUIs.Contains(_uiComponent)){
             return;
         }
-        _uiComponent.Hidden();
+        _uiComponent.Hide();
         popupUIs.Remove(_uiComponent);
     }
 

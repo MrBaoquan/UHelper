@@ -18,8 +18,9 @@ public abstract class UIBase : MonoBehaviour
         }
     }
 
+    protected bool bShow = false;
     public bool isShowing{
-        get {return this.gameObject.activeInHierarchy;}
+        get {return bShow;}
     }
     
     public virtual void OnLoad()
@@ -29,14 +30,29 @@ public abstract class UIBase : MonoBehaviour
 
     public virtual void Show()
     {
-        this.gameObject.SetActive(true);
+        if(!this.gameObject.activeInHierarchy){
+            this.gameObject.SetActive(true);
+        }
+        bShow = true;
         this.OnShow();
+        handleShowAction();
     }
 
-    public virtual void Hidden()
+    protected virtual void handleShowAction()
+    {
+        this.gameObject.SetActive(true);
+    }
+
+    protected virtual void handleHideAction()
     {
         this.gameObject.SetActive(false);
+    }
+
+    public virtual void Hide()
+    {
+        bShow = false;
         this.OnHidden();
+        handleHideAction();
     }
 
     protected virtual void OnShow()

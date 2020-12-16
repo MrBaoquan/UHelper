@@ -7,22 +7,22 @@ using UnityEngine.UI;
 using UniRx;
 
 
+namespace UHelper
+{
+
+
 [RequireComponent(typeof(VideoPlayer))]
 public class UVideoPlayer : MonoBehaviour
 {
     public VideoRenderMode renderMode = VideoRenderMode.RenderTexture;
+    public bool looping = false;
     public bool Looping
     {
         set{
-            if(videoPlayer!=null){
-                videoPlayer.isLooping = value;
-            }
+            looping = value;
         }
         get {
-            if(videoPlayer!=null){
-                return videoPlayer.isLooping;
-            }
-            return false;
+            return looping;
         }
     }
 
@@ -80,6 +80,10 @@ public class UVideoPlayer : MonoBehaviour
         videoPlayer.targetTexture = InTexture;
     }
 
+    public void Render2Texture(Material InMaterial){
+        InMaterial.SetTexture("_MainTex",videoPlayer.targetTexture);
+    }
+
     public void Render2Material(Renderer InRenderer=null){
         videoPlayer.renderMode = VideoRenderMode.MaterialOverride;
         if(InRenderer==null){
@@ -92,21 +96,28 @@ public class UVideoPlayer : MonoBehaviour
         videoPlayer.targetMaterialRenderer = InRenderer;
     }
 
+    public UVideoPlayer DisablePlayOnAwake(){
+        videoPlayer.playOnAwake = false;
+        return this;
+    }
+
+    public UVideoPlayer DisableLoop(){
+        videoPlayer.isLooping = false;
+        return this;
+    }
+
     private void Awake() {
         buildRefs();
-        syncRenderMode();
+        videoPlayer.isLooping = false;
+        //syncRenderMode();
 
         videoPlayer.errorReceived+=(_vp,_error)=>{
             Debug.LogError(_error);
         };
 
         videoPlayer.started+=(_)=>{
-            Debug.LogFormat("UVP_{0} ============== Started: {1}", UnityEngine.Time.time, videoPlayer.time);
+            //Debug.LogFormat("UVP_{0} ============== Started: {1}", UnityEngine.Time.time, videoPlayer.time);
         };
-
-        // videoPlayer.frameReady+= (_vp,_frame)=>{
-        //     Debug.LogFormat("frame {0} ready...",_frame);
-        // };
     }
 
     void buildRefs(){
@@ -122,23 +133,13 @@ public class UVideoPlayer : MonoBehaviour
      */
     public void PlayByUrl(string InUrl, VideoPlayer.EventHandler OnReachEndHandler=null, int loop=-1, float StartTime=0, float InEndTime=0)
     {
-        Debug.LogFormat("UVP_{0} ========== request Play by url: {1}", UnityEngine.Time.time, videoPlayer.time);
         videoPlayer.url = InUrl;
         this.Play(OnReachEndHandler,loop,StartTime,InEndTime);   
     }
 
     public void Play(VideoClip InClip, VideoPlayer.EventHandler OnReachEndHandler=null, int loop=-1, float StartTime=0, float InEndTime=0){
-        Debug.LogFormat("UVP_{0} ========== request Play by clip: {1}", UnityEngine.Time.time, videoPlayer.time);
         videoPlayer.clip = InClip;
         Play(OnReachEndHandler,loop,StartTime,InEndTime);
-    }
-
-    public void Prepare(VideoClip InClip, VideoPlayer.EventHandler OnPrepared=null){
-        Debug.LogFormat("UVP_{0} ========== request prepare clip: {1}", UnityEngine.Time.time, videoPlayer.time);
-        videoPlayer.clip = InClip;
-        this.Prepare(_=>{
-            this.SeekTo(0f,OnPrepared);
-        });
     }
 
     public void Play(VideoPlayer.EventHandler OnReachEndHandler=null, int loop=-1, float StartTime=0, float InEndTime=0)
@@ -155,6 +156,18 @@ public class UVideoPlayer : MonoBehaviour
         }
     }
 
+    private bool isFullVPLength(double InLength){
+        return videoPlayer.length == InLength;
+    }
+
+
+    /// <summary>
+    /// 视频播放控制核心逻辑
+    /// </summary>
+    /// <param name="OnReachEndHandler"></param>
+    /// <param name="loop"></param>
+    /// <param name="StartTime"></param>
+    /// <param name="InEndTime"></param>
     private void realPlay(VideoPlayer.EventHandler OnReachEndHandler=null, int loop=-1, float StartTime=0, float InEndTime=0)
     {
         Debug.LogFormat("UVP_{0} ========== request real play", UnityEngine.Time.time);
@@ -170,15 +183,14 @@ public class UVideoPlayer : MonoBehaviour
 
         double _startTime = Mathf.Max(StartTime,0);
         double _endTime = 0.0f;
-
         bool _bSeekCompleted = false;
 
         if(InEndTime>0){
-            _endTime = Mathf.Min(InEndTime,(float)videoPlayer.length) - 0.05f;
+            _endTime = Mathf.Min(InEndTime,(float)videoPlayer.length);
         }else{
             _endTime = videoPlayer.length;
         }
-        
+        //Debug.LogFormat("UVP:Play [{0} - {1}]",_startTime, _endTime);
         if(vpReachEnd!=null){
             videoPlayer.loopPointReached -= vpReachEnd;
             vpReachEnd = null;
@@ -190,63 +202,55 @@ public class UVideoPlayer : MonoBehaviour
         }
 
         vpReachEnd = _=>{
-                Debug.LogFormat("到达视频结尾:{0}",Time);
                 _bSeekCompleted = false;
-                if(_looping){
-                    this.SeekTo(_startTime,_3=>{
-                        if(!videoPlayer.isPlaying){
-                            //Debug.Log("UVP: Play video by Play 1");
-                            videoPlayer.Play();
-                        }
-                        _bSeekCompleted = true;
-                    });
-                }else{
-                    //Debug.LogFormat("UVP: from start {0} reach end point:{1}, stopped", _startTime, _endTime);
-                    if(videoPlayer.isPlaying){
-                        //Debug.Log("UVP: Pause video P1");
-                        videoPlayer.Pause();    
-                    }
-                    vpLoopTimer.Dispose();
-                    videoPlayer.loopPointReached -= vpReachEnd;
-                    vpLoopTimer = null;
-                }
                 if(OnReachEndHandler!=null)
                     OnReachEndHandler(videoPlayer);
+
+                if(looping){
+                    this.SeekTo(_startTime,_7=>{},_8=>{
+                        _bSeekCompleted = true;
+                    },true);
+                }else{
+                    if(videoPlayer.isPlaying){
+                        videoPlayer.Pause();    
+                    }
+                    videoPlayer.loopPointReached -= vpReachEnd;
+                    if(vpLoopTimer!=null){
+                        vpLoopTimer.Dispose();
+                        vpLoopTimer = null;
+                    }
+                }
         };
 
         vpLoopTimer = Observable.EveryUpdate().Where(_=>_bSeekCompleted).Subscribe(_1=>{
-            if(videoPlayer.time<_startTime){
-                _bSeekCompleted = false;
-                //Debug.Log("UVP: Seek to startTime P2");
-                this.SeekTo(_startTime,_4=>{
-                    _bSeekCompleted = true;
-                    if(!videoPlayer.isPlaying){
-                        //Debug.Log("UVP: Play video by Play 4");
-                        videoPlayer.Play();
-                    }
-                });
-                return;
-            }
-            
-            if(videoPlayer.time>=_endTime){ // 视频时间到达真正的视频结尾时, 该条件并不满足
+            if(videoPlayer.time>=_endTime){ // 经测试  触发onReachEndpoint时  videoPlayer.time 是小于 videoPlayer.length的
                 vpReachEnd(videoPlayer);
             }
         });
-        //Debug.LogFormat("Prepared:{0}, Paused:{1}, Playing:{2} ",videoPlayer.isPrepared,videoPlayer.isPaused,videoPlayer.isPlaying);
 
-        //Debug.Log("UVP: Seek to startTime P1");
-        this.SeekTo(_startTime,_=>{
-            _bSeekCompleted = true;
-            videoPlayer.loopPointReached += vpReachEnd;        
-            Debug.Log("UVP: Play video by seek completed");
-            videoPlayer.Play();
-        });
+        this.SeekTo(_startTime,_=>{},
+            _2=>{
+                _bSeekCompleted = true;
+                videoPlayer.loopPointReached += vpReachEnd;
+            },true);
     }
     
     private VideoPlayer.EventHandler vpPreapared = null;
+    public void Prepare(VideoClip InClip, VideoPlayer.EventHandler OnPrepared=null){
+        videoPlayer.clip = InClip;
+        this.Prepare(_=>{
+            this.SeekTo(0f,OnPrepared);
+        });
+    }
+
+    public void Prepare(string InUrl, VideoPlayer.EventHandler OnPrepared=null){
+        videoPlayer.url = InUrl;
+        this.Prepare(_=>{
+            this.SeekTo(0f, OnPrepared);
+        });
+    }
     public void Prepare(VideoPlayer.EventHandler OnPrepared=null)
     {
-        Debug.LogFormat("UVP_{0} ==========  request prepare", UnityEngine.Time.time, videoPlayer.time);
         if(videoPlayer==null){
             Debug.LogWarning("UVP: null reference of videoPlayer");
         }
@@ -257,7 +261,6 @@ public class UVideoPlayer : MonoBehaviour
         }
 
         vpPreapared = _=>{
-            Debug.LogFormat("UVP_{0} ==========  prepare  completed: {1}", UnityEngine.Time.time, videoPlayer.time);
             if(OnPrepared!=null)
                 OnPrepared(videoPlayer);
             videoPlayer.prepareCompleted-=vpPreapared;
@@ -267,9 +270,11 @@ public class UVideoPlayer : MonoBehaviour
     }
     private VideoPlayer.EventHandler vpSeekCompleted = null;
     private IDisposable vpSeekTimer = null;
-    public void SeekTo(double InTime, VideoPlayer.EventHandler InSeekedHandler=null)
+    private bool timeGreaterThan(double InTime){
+        return videoPlayer.time>=InTime;
+    }
+    public void SeekTo(double InTime, VideoPlayer.EventHandler InSeekedHandler=null, VideoPlayer.EventHandler InTimeReadyHandler=null, bool AutoPlay=false)
     {
-        
         if(vpSeekCompleted!=null){
             videoPlayer.seekCompleted -= vpSeekCompleted;
             vpSeekCompleted = null;
@@ -292,37 +297,43 @@ public class UVideoPlayer : MonoBehaviour
                 return _reachEnd;
             };
         }
+
         double _originGameTime = UnityEngine.Time.time;
+
         Debug.LogFormat("UVP_{0}:========= start seek ",UnityEngine.Time.time, UnityEngine.Time.time - _originGameTime);
         vpSeekCompleted = _=>{
             Debug.LogFormat("UVP_{0}:=========Seek complted delta 1: {1}",UnityEngine.Time.time, UnityEngine.Time.time - _originGameTime);
+            Debug.LogFormat("UVP_Current:{0}", videoPlayer.time);
             videoPlayer.seekCompleted -= vpSeekCompleted;
             vpSeekCompleted = null;
-            vpSeekTimer = Observable.EveryUpdate().Where(_condition).Subscribe(_2=>{
-                videoPlayer.SetDirectAudioMute(0, false);
-                if(videoPlayer.isPlaying){
-                    //Debug.Log("UVP: Pause video by Seek()");
+            
+            videoPlayer.SetDirectAudioMute(0, false);
+            if(InSeekedHandler != null){
+                InSeekedHandler(videoPlayer);
+            }
+
+            Observable.EveryUpdate().Where(_condition).First().Subscribe(_11=>{
+                Debug.LogFormat("UVP_{0}:=========Seek complted delta 2: {1}",UnityEngine.Time.time, UnityEngine.Time.time - _originGameTime);
+                Debug.LogFormat("UVP_Current:{0}", videoPlayer.time);
+
+                if(videoPlayer.isPlaying&&!AutoPlay){
                     videoPlayer.Pause();
                 }
-                vpSeekTimer.Dispose();
-                vpSeekTimer = null;   
-                Debug.LogFormat("UVP_{0}:=========Seek complted delta 2: {1}",UnityEngine.Time.time, UnityEngine.Time.time - _originGameTime);
-                if(InSeekedHandler != null){
-                   // Debug.Log("UVP: callback seek completed.");
-                    InSeekedHandler(videoPlayer);
+                if(InTimeReadyHandler!=null){
+                    InTimeReadyHandler(videoPlayer);
                 }
             });
+
         };
 
         videoPlayer.SetDirectAudioMute(0, true);
         videoPlayer.seekCompleted += vpSeekCompleted;
-        videoPlayer.time = InTime;
 
         if(!videoPlayer.isPlaying){
             //Debug.Log("UVP: Play video by Play 3");
             videoPlayer.Play();
         }
-        
+        videoPlayer.time = InTime;
     }
 
     public void Play()
@@ -375,8 +386,8 @@ public class UVideoPlayer : MonoBehaviour
     }
 
     private void OnValidate() {
-        buildRefs();
-        syncRenderMode();
+        //buildRefs();
+        //syncRenderMode();
     }
 
     private void syncRenderMode(){
@@ -389,3 +400,8 @@ public class UVideoPlayer : MonoBehaviour
 
 
 }
+
+
+
+}
+
