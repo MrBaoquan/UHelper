@@ -21,7 +21,8 @@ public class UHelperEditor : Editor
         GameObject _newUHelper = PrefabUtility.InstantiatePrefab(_uhelperPrefab) as GameObject;
 
         string _uhelperConfigPath = Application.dataPath + "/UHelper/Resources/Configs";
-        string _customConfigPath =Application.dataPath + "/Resources/UHelper";
+        string _customConfigPath = Application.dataPath + "/Resources/UHelper";
+        string _textTemplatePath = Application.dataPath + "/UHelper/Editor/Templates";
 
         if(!Directory.Exists(_customConfigPath)){
             Directory.CreateDirectory(_customConfigPath);
@@ -37,8 +38,14 @@ public class UHelperEditor : Editor
             File.Copy(Path.Combine(_uhelperConfigPath,"ui.json"),_dstUIPath);
         }
 
+        string _dstAssembliesConfigPath = Path.Combine(_customConfigPath, "assemblies.json");
+        if(!File.Exists(_dstAssembliesConfigPath)){
+            File.Copy(Path.Combine(_textTemplatePath,"AssembliesTemplate.txt"),_dstAssembliesConfigPath);
+        }
+
         // 做一些项目结构
-        string _uiScriptsDir = Path.Combine(Application.dataPath, "Develop/Scripts/UI");    // 存放UI脚本
+        string _scriptDir = Path.Combine(Application.dataPath, "Develop/Scripts");
+        string _uiScriptsDir = Path.Combine(_scriptDir,"UI");    // 存放UI脚本
         string _artAssetsDir = Path.Combine(Application.dataPath, "ArtAssets");             // 存放美工资源
 
         if(!Directory.Exists(_uiScriptsDir)){
@@ -47,6 +54,11 @@ public class UHelperEditor : Editor
 
         if(!Directory.Exists(_artAssetsDir)){
             Directory.CreateDirectory(_artAssetsDir);
+        }
+
+        string _dstAssemblyPath = Path.Combine(_scriptDir,"MainGame.asmdef");
+        if(!File.Exists(_dstAssemblyPath)){
+            File.Copy(Path.Combine(_textTemplatePath,"MainGameAssembly.txt"),_dstAssemblyPath);
         }
         
         AssetDatabase.Refresh();

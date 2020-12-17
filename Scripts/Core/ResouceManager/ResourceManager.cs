@@ -164,7 +164,7 @@ public class ResourceManager : Singleton<ResourceManager>,Manageable
 
     private void ReadConfigData()
     {
-        string _resPath = UHelperEntry.Instance.config.resPath;
+        string _resPath = UHelperConfig.ResourceConfigPath;
         TextAsset _resAsset = Resources.Load<TextAsset>(_resPath);
         // 逻辑层自定义资源加载配置项
         var _logicConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string,List<ResourceItem>>>(_resAsset.text);
@@ -210,7 +210,6 @@ public class ResourceManager : Singleton<ResourceManager>,Manageable
         }
         
     }
-
 
     // 加载Resources文件夹下资源包
     private void LoadResourceAssets(List<ResourceItem> InItems, string InResID){

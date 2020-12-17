@@ -234,7 +234,7 @@ public class UIManager : Singleton<UIManager>,Manageable
 
     private void ReadConfigData()
     {
-        string _uiPath = UHelperEntry.Instance.config.uiPath;
+        string _uiPath = UHelperConfig.UIConfigPath;
         TextAsset _uiAsset = Resources.Load<TextAsset>(_uiPath);
         customUIConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string,Dictionary<string,UIConfig>>>(_uiAsset.text);
 
@@ -262,11 +262,11 @@ public class UIManager : Singleton<UIManager>,Manageable
 
     private void SpawnUI(string InUIKey,UIConfig InUIConfig)
     {
-        string _scriptName = InUIConfig.GetScript(InUIKey);
-        Type _T = Type.GetType(_scriptName);
+        //string _scriptName = InUIConfig.GetScript(InUIKey) + ", MainGame, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
+        Type _T = AssemblyConfig.GetUType(InUIKey);
         if(_T==null)
         {
-            Debug.LogWarningFormat("no class name match: {0}, spawn ui {0} failed", _scriptName);
+            Debug.LogWarningFormat("no class name match: {0}, spawn ui {0} failed", InUIKey);
             return;
         }
 

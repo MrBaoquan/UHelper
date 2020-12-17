@@ -15,16 +15,12 @@ using UnityEngine;
  
 namespace UHelper
 {
-public class UHelperEntry:SingletonBehaviour<UHelperEntry>
+public class UHelperEntry : SingletonBehaviour<UHelperEntry>
 {
-    [HideInInspector]
-    public UHelperConfig config;
-
     private AppConfig appConfig;
     private void Awake() 
     {
         Debug.Log("UHelper.Awake");
-        Debug.Log(typeof(UnityEngine.Video.VideoClip));
         if(UHelperEntry.Instance!=this){
             GameObject.Destroy(this);
             return;
@@ -34,13 +30,13 @@ public class UHelperEntry:SingletonBehaviour<UHelperEntry>
         GameObject _utilGO = new GameObject("UHelperUtils");
         _utilGO.transform.parent = this.transform;
         _utilGO.AddComponent(typeof(MonobehaviourUtil));
-                
 
-        // 配置文件
+#if UNITY_EDITOR
+        AssemblyConfig.Refresh();
+#endif
+
+        // 1. 配置文件
         Managements.Config.Initialize();
-
-        // 1. 初始化配置项
-        config = Resources.Load<UHelperConfig>("UHelperConfig");
         
         // 2. 初始化资源管理类
         ResourceManager.Instance.Initialize();

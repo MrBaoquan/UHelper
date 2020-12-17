@@ -9,6 +9,14 @@ namespace UHelper
 {
 public class SceneScriptManager : Singleton<SceneScriptManager>
 {
+    public static void Register<T>(){
+        Debug.Log(typeof(T).FullName);
+    }
+
+    public static void Register(string InType){
+        Debug.Log(Type.GetType(InType).FullName);
+    }
+
     public class SceneScriptData{
         public SceneScriptBase sceneScript;
         public IDisposable updateObserverable;
@@ -33,7 +41,7 @@ public class SceneScriptManager : Singleton<SceneScriptManager>
         if(!sceneScripts.TryGetValue(InSceneName, out _sceneScriptData))
         {
             string _sceneScriptTypeName = InSceneName + "Script";
-            Type _T = Type.GetType(_sceneScriptTypeName);
+            Type _T = AssemblyConfig.GetUType(_sceneScriptTypeName);
             if(_T!=null)
             {
                 // 重新初始化 SceneScript 实例

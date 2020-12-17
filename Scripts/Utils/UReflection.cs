@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System;
@@ -44,6 +45,10 @@ public static class UReflection
     public static System.Type[] SubClasses(Type InBaseClass)
     {
         return Assembly.GetAssembly(InBaseClass).GetTypes().Where(_type=>_type.IsSubclassOf(InBaseClass)).ToArray();
+    }
+
+    public static List<System.Type> SubClasses(this Assembly InAssembly, Type InBaseClass){
+        return InAssembly.GetTypes().Where(_type=>_type.IsSubclassOf(InBaseClass)).ToList();
     }
 
 
