@@ -45,6 +45,11 @@ public class AssemblyConfig : ScriptableObject
     }
 
     public List<string> Assemblies;
+    public List<string> filterBaseTypes = new List<string>{
+        typeof(UIBase).AssemblyQualifiedName,
+        typeof(SceneScriptBase).AssemblyQualifiedName,
+        typeof(UConfig).AssemblyQualifiedName
+    };
     public List<UType> CachedTypes;
     private Dictionary<string,string> allTypes{
         get{
@@ -53,12 +58,6 @@ public class AssemblyConfig : ScriptableObject
                 .ToDictionary(_1=>_1.Name,_2=>_2.FullName);
         }
     }
-
-    public List<string> filterBaseTypes = new List<string>{
-        typeof(UIBase).AssemblyQualifiedName,
-        typeof(SceneScriptBase).AssemblyQualifiedName,
-        typeof(UConfig).AssemblyQualifiedName
-    };
 
     private Dictionary<string,List<Type>> allTypeMaps = new Dictionary<string, List<Type>>();
 

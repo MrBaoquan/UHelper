@@ -15,7 +15,7 @@ public class UTimerManager : Singleton<UTimerManager>,Manageable
 
     public void Initialize(){}
 
-    public void UnInitialize(){}
+    public void Uninitialize(){}
 
     public IDisposable SetTimeout(float InDuration, Action OnCompleted = null, Action<float> OnUpdate = null, float InInterval=0.05f)
     {

@@ -85,7 +85,7 @@ public class UEventManager : Singleton<UEventManager>,Manageable
         
     }
 
-    public void UnInitialize()
+    public void Uninitialize()
     {
 
     }

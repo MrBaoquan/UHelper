@@ -3,7 +3,7 @@ namespace UHelper
 {
 
 
-public class SPFixedReceiver : USerialPortMessageReceiver
+public class SPFixedReceiver : USPMsgReceiver
 {
     public int FixedLength = 0;
     public override void OnFlushMessage()
@@ -12,9 +12,9 @@ public class SPFixedReceiver : USerialPortMessageReceiver
         if(serialPort.BytesToRead>=FixedLength){
             try
             {
-                var _rawData = serialPort.Read(FixedLength);
-                UnityEngine.Debug.LogFormat("receive {0}",_rawData.Length);
-                PushMessage(new SPMessage{RawData=_rawData, PortName=serialPort.PortName});
+                var _buffer = new byte[FixedLength];
+                var _rawData = serialPort.Read(_buffer,0,FixedLength);
+                PushMessage(new SPMessage{RawData=_buffer});
             }
             catch (System.Exception e)
             {

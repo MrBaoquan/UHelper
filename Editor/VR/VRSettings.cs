@@ -5,6 +5,7 @@
 //		Edit -> Project Settings -> Player -> Other Settings
 
 using UnityEditor;		//Enables the use of editor modifying code
+using UnityEngine.XR;
 
 namespace UHelper
 {
@@ -21,7 +22,12 @@ namespace UHelper
         static void EnableVR()
         {
             //Turn VR Supported on
+#if UNITY_2020
+            XRSettings.enabled = true;
+#else
             PlayerSettings.virtualRealitySupported = true;
+#endif
+
         }
 
         //This method "validates" the Enable menu item. It is used by the editor to format
@@ -29,12 +35,17 @@ namespace UHelper
         [MenuItem(ONNAME, true)]
         static bool EnableValidate()
         {
+#if UNITY_2020
+            bool enabled = XRSettings.enabled;
+#else
+            bool enabled = PlayerSettings.virtualRealitySupported;
+#endif
             //If VR Supported is enabled, add a checkmark next to this menu item
-            Menu.SetChecked(ONNAME, PlayerSettings.virtualRealitySupported);
+            Menu.SetChecked(ONNAME, enabled);
             //Return the opposite of whether or not VR is supported. Thus, if VR Supported is enabled,
             //this returns "false". The result is that if VR Support is enabled, this menu item is grayed-out
             //and cannot be selected again
-            return !PlayerSettings.virtualRealitySupported;
+            return !enabled;
         }
 
         //This method creates the Disable menu item. When the menu item is clicked, the code
@@ -43,7 +54,11 @@ namespace UHelper
         static void DisableVR()
         {
             //Turn VR Supported off
+#if UNITY_2020
+            XRSettings.enabled = false;
+#else
             PlayerSettings.virtualRealitySupported = false;
+#endif
         }
 
         //This method "validates" the Disable menu item. It is used by the editor to format
@@ -51,12 +66,17 @@ namespace UHelper
         [MenuItem(OFFNAME, true)]
         static bool DisableValidate()
         {
+#if UNITY_2020
+            bool enabled = XRSettings.enabled;
+#else
+            bool enabled = PlayerSettings.virtualRealitySupported;
+#endif
             //If VR Supported is disabled, add a checkmark next to this menu item
-            Menu.SetChecked(OFFNAME, !PlayerSettings.virtualRealitySupported);
+            Menu.SetChecked(OFFNAME, !enabled);
             //Return the opposite of whether or not VR is supported. Thus, if VR Supported is disabled,
             //this returns "true". The result is that if VR Support is disabled, this menu item is grayed-out
             //and cannot be selected again
-            return PlayerSettings.virtualRealitySupported;
+            return enabled;
         }
     }
 }

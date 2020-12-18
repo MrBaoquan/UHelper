@@ -25,7 +25,6 @@ public class UHelperEditor : Editor
         Debug.LogFormat("new scene created {0}",scene.name);
     }
 
-    private  static bool isNewScene = false;
     private static void SceneSaved(Scene scene){
         CodeTemplateGenerator.CreateSceneScriptIfNotExists(scene.name);
     }
@@ -33,11 +32,9 @@ public class UHelperEditor : Editor
     [MenuItem("UHelper/Initialize",priority=0)]
     public static void CreateDefault()
     {
-        isNewScene = false;
         EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
         var _sceneEntry = EditorSceneManager.GetSceneByName(sceneEntryName);
         if(!_sceneEntry.IsValid()){
-                isNewScene = true;
                 _sceneEntry = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects,NewSceneMode.Single);
                 EditorSceneManager.SaveScene(_sceneEntry, string.Format("Assets/Scenes/{0}.unity",sceneEntryName));
         }else{
@@ -88,26 +85,27 @@ public class UHelperEditor : Editor
         }
 
         // 做一些项目结构
-        string _scriptDir = Path.Combine(Application.dataPath, "Develop/Scripts");
-        string _uiScriptsDir = Path.Combine(_scriptDir,"UI");    // 存放UI脚本
-        string _artAssetsDir = Path.Combine(Application.dataPath, "ArtAssets");             // 存放美工资源
+        List<string> _frame_dirs = new List<string>{
+            Path.Combine(Application.dataPath, "Develop/Scripts"),
+            Path.Combine(Application.dataPath, "Develop/Scripts/UIs"),
+            Path.Combine(Application.dataPath, "Develop/Scripts/Configs"),
+            Path.Combine(Application.dataPath, "ArtAssets")
+        };
 
-        if(!Directory.Exists(_uiScriptsDir)){
-            Directory.CreateDirectory(_uiScriptsDir);
-        }
-
-        if(!Directory.Exists(_artAssetsDir)){
-            Directory.CreateDirectory(_artAssetsDir);
-        }
+        _frame_dirs.ForEach(_path=>{
+            if(!Directory.Exists(_path)){
+                Directory.CreateDirectory(_path);
+            };
+        });
 
         // 3.   创建程序集定义文件
-        string _dstAssemblyPath = Path.Combine(_scriptDir,"GameMain.asmdef");
+        string _dstAssemblyPath = Path.Combine(Path.GetFullPath("Assets/Develop/Scripts"),"GameMain.asmdef");
         if(!File.Exists(_dstAssemblyPath)){
             File.Copy(Path.Combine(_textTemplatePath,"GameMainAssembly.txt"),_dstAssemblyPath);
         }
         
         AssetDatabase.Refresh();
-        Debug.Log("UHelper initalize completed.");
+        Debug.Log("UHelper framework initalize successful.");
        //AssetDatabase.LoadAssetAtPath()
        //MonoScript _uhelperScript = MonoScript.FromMonoBehaviour(UHelper.UHelperEntry);
    }

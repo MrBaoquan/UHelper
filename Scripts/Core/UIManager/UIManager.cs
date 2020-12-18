@@ -207,7 +207,7 @@ public class UIManager : Singleton<UIManager>,Manageable
         });
     }
 
-    public void UnInitialize()
+    public void Uninitialize()
     {
         
     }

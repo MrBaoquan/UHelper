@@ -57,7 +57,7 @@ public class UNetManager : Singleton<UNetManager>,Manageable
         //     }
         // });
     }
-    public void UnInitialize(){
+    public void Uninitialize(){
 
     }
 

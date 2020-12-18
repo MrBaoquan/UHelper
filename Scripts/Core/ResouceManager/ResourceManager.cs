@@ -43,7 +43,7 @@ public class ResourceManager : Singleton<ResourceManager>,Manageable
         this.LoadSceneResources();
     }
 
-    public void UnInitialize()
+    public void Uninitialize()
     {
 
     }
