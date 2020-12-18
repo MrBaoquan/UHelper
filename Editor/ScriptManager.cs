@@ -58,6 +58,20 @@ public class CodeTemplateGenerator
         );
     }
 
+    public static void CreateSceneScriptIfNotExists(string InScriptName)
+    {
+        string _relativePath = string.Format("Assets/Develop/Scripts/{0}Script.cs", InScriptName);
+        string _scriptPath = Path.GetFullPath(_relativePath);
+        if(File.Exists(_scriptPath)) return;
+        
+        var _directory =  Path.GetDirectoryName(_scriptPath);
+        if(!Directory.Exists(_directory)){
+            Directory.CreateDirectory(_directory);
+        }
+        Object o = CreateScript(_relativePath, @"Assets\UHelper\Editor\Templates\SceneScriptTemplate.txt");
+        ProjectWindowUtil.ShowCreatedAsset (o);
+    }
+
     /// <summary>Creates Script from Template's path.</summary>
     internal static UnityEngine.Object CreateScript(string pathName, string templatePath)
     {

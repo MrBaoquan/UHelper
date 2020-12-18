@@ -8,11 +8,8 @@ using UnityEditor;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 
-
-public static class EditorSceneEventCallback
+namespace UHelper
 {
-
-}
 
 public class UHelperEditor : Editor
 {
@@ -30,9 +27,7 @@ public class UHelperEditor : Editor
 
     private  static bool isNewScene = false;
     private static void SceneSaved(Scene scene){
-        if(isNewScene){
-            Debug.LogFormat("new scene {0}", scene.name);
-        }
+        CodeTemplateGenerator.CreateSceneScriptIfNotExists(scene.name);
     }
 
     [MenuItem("UHelper/Initialize",priority=0)]
@@ -117,3 +112,9 @@ public class UHelperEditor : Editor
        //MonoScript _uhelperScript = MonoScript.FromMonoBehaviour(UHelper.UHelperEntry);
    }
 }
+
+
+
+}
+
+
