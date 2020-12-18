@@ -16,7 +16,7 @@ public class SPMessage : UMessage
 }
 
 
-class SerialPortManager : Singleton<SerialPortManager>, Manageable
+public class SerialPortManager : Singleton<SerialPortManager>, Manageable
 {
     private Dictionary<string,USerialPort> serialPorts = new Dictionary<string, USerialPort>();
     private Queue<SPMessage> messages = new Queue<SPMessage>();

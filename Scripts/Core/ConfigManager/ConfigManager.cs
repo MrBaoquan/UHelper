@@ -14,7 +14,7 @@ public class ConfigManager : Singleton<ConfigManager>
     private Dictionary<string,UConfig> configs = new Dictionary<string, UConfig>();
     public void Initialize()
     {
-        Type[] _configClasses = UReflection.SubClasses(typeof(UConfig));
+        Type[] _configClasses =  AssemblyConfig.GetSubClasses(typeof(UConfig)).ToArray();// UReflection.SubClasses(typeof(UConfig));
 
         foreach (var _configClass in _configClasses)
         {
@@ -30,7 +30,6 @@ public class ConfigManager : Singleton<ConfigManager>
             if(!File.Exists(_path)){
                 UXmlSerialization.Serialize(_configInstance,_path);
             }else{
-                Debug.Log(_configInstance.GetType());
                 MethodInfo _method = typeof(UXmlSerialization).GetMethod("Deserialize").MakeGenericMethod(new Type[]{_configClass});
                 _configInstance = _method.Invoke(null,new object[]{_path}) as UConfig;
             }

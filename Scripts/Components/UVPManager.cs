@@ -27,7 +27,6 @@ public class UVPManager : MonoBehaviour
             var _newPlayer = new GameObject(_videoName);
             _newPlayer.transform.parent = this.transform;
             var _urlPlayer = _newPlayer.AddComponent<UVideoPlayer>();
-            Debug.LogFormat("add url {0}",_videoName);
             urlPlayers.Add(_videoName, buildUrlPlayer(_urlPlayer,_url));
         });
     }

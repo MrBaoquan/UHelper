@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 namespace UHelper{
     
 
-abstract class USerialPortMessageReceiver
+public abstract class USerialPortMessageReceiver
 {
 
     protected USerialPort serialPort = null;

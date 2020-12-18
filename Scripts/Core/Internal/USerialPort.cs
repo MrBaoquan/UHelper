@@ -8,7 +8,7 @@ using UHelper;
 namespace UHelper
 {
 
-class USerialPort
+public class USerialPort
 {
     SerialPort serialPort = new SerialPort();
 

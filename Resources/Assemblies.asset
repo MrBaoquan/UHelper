@@ -12,8 +12,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 062022b7425d5854db446dccd9e62220, type: 3}
   m_Name: Assemblies
   m_EditorClassIdentifier: 
-  Assemblies: []
-  CachedTypes: []
+  Assemblies:
+  - UHelper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  - MainGame, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  CachedTypes:
+  - Name: DialogUI
+    FullName: DialogUI, UHelper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  - Name: LicenseUI
+    FullName: LicenseUI, UHelper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  - Name: MainMenuUI
+    FullName: MainMenuUI, MainGame, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  - Name: PlayUI
+    FullName: PlayUI, MainGame, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  - Name: TipUI
+    FullName: TipUI, MainGame, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  - Name: SceneEntryScript
+    FullName: SceneEntryScript, MainGame, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
   filterBaseTypes:
   - UHelper.UIBase, UHelper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  - UHelper.UConfig, UHelper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
   - UHelper.SceneScriptBase, UHelper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null

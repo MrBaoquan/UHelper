@@ -3,7 +3,7 @@ namespace UHelper
 {
 
 
-class SPFixedReceiver : USerialPortMessageReceiver
+public class SPFixedReceiver : USerialPortMessageReceiver
 {
     public int FixedLength = 0;
     public override void OnFlushMessage()

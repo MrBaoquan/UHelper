@@ -39,6 +39,11 @@ public class AssemblyConfig : ScriptableObject
         return Self().getUType(InTypeName);
     }
 
+    public static List<Type> GetSubClasses(Type InBaseType)
+    {
+        return Self().getSubClasses(InBaseType);
+    }
+
     public List<string> Assemblies;
     public List<UType> CachedTypes;
     private Dictionary<string,string> allTypes{
@@ -52,7 +57,10 @@ public class AssemblyConfig : ScriptableObject
     public List<string> filterBaseTypes = new List<string>{
         typeof(UIBase).AssemblyQualifiedName,
         typeof(SceneScriptBase).AssemblyQualifiedName,
+        typeof(UConfig).AssemblyQualifiedName
     };
+
+    private Dictionary<string,List<Type>> allTypeMaps = new Dictionary<string, List<Type>>();
 
     private Type getUType(string InTypeName)
     {
@@ -66,6 +74,8 @@ public class AssemblyConfig : ScriptableObject
     public void refresh()
     {
         Assemblies.Clear();
+        allTypeMaps.Clear();
+        CachedTypes.Clear();
         var _internalAssemblies = getAssemblies("Configs/assemblies");
         var _customAssemblies = getAssemblies(UHelperConfig.AssemblyConfigPath);
 
@@ -83,6 +93,11 @@ public class AssemblyConfig : ScriptableObject
             return new List<string>();
         }
         return JsonConvert.DeserializeObject<List<string>>(_asset.text);
+    }
+
+    private List<Type> getSubClasses(Type InBaseType){
+        if(!allTypeMaps.ContainsKey(InBaseType.AssemblyQualifiedName)) return new List<Type>();
+        return allTypeMaps[InBaseType.AssemblyQualifiedName];
     }
 
     public void Awake()
@@ -110,13 +125,16 @@ public class AssemblyConfig : ScriptableObject
 
         filterBaseTypes.Select(_filterTypeString=>Type.GetType(_filterTypeString)).ToList()
             .ForEach(_filterType=>{
-                Debug.Log(_filterType.FullName);
-                _assembly.SubClasses(_filterType).ToList()
-                    .ForEach(_type=>{
-                        if(!_allTypes.ContainsKey(_type.Name)){
-                            CachedTypes.Add(new UType{Name=_type.Name, FullName=_type.AssemblyQualifiedName});
-                        }
-                    });
+                var _filterTypes = _assembly.SubClasses(_filterType).ToList();
+                _filterTypes.ForEach(_type=>{
+                    if(!_allTypes.ContainsKey(_type.Name)){
+                        CachedTypes.Add(new UType{Name=_type.Name, FullName=_type.AssemblyQualifiedName});
+                    }
+                });
+                if(!allTypeMaps.ContainsKey(_filterType.AssemblyQualifiedName)){
+                    allTypeMaps.Add(_filterType.AssemblyQualifiedName, new List<Type>());
+                }
+                allTypeMaps[_filterType.AssemblyQualifiedName].AddRange(_filterTypes);
             });
 
         

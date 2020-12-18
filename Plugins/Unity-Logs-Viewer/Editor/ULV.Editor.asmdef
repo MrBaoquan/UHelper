@@ -1,9 +1,11 @@
 {
-    "name": "MainGame",
+    "name": "ULV.Editor",
     "references": [
-        "GUID:f5880b1b680bf1643b407bffbb50a990"
+        "GUID:0f83df45269a7f644b6da3c911afe4d0"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
