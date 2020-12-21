@@ -27,6 +27,8 @@ public class UVPManager : MonoBehaviour
             var _newPlayer = new GameObject(_videoName);
             _newPlayer.transform.parent = this.transform;
             var _urlPlayer = _newPlayer.AddComponent<UVideoPlayer>();
+            _urlPlayer.BuildRenderTexture(Screen.width,Screen.height);
+            _urlPlayer.Render2Texture();
             urlPlayers.Add(_videoName, buildUrlPlayer(_urlPlayer,_url));
         });
     }
@@ -43,23 +45,29 @@ public class UVPManager : MonoBehaviour
         var _videoName = Path.GetFileNameWithoutExtension(InUrl);
         Debug.LogFormat("UVP:{0}",_videoName);
         if(!urlPlayers.ContainsKey(_videoName)){
-            Debug.LogWarning("视频不存在");
+            Debug.LogWarning("{0} not exists");
             return;
         }
 
         if(currentPlayer!=null){
-            currentPlayer.Pause();
+            currentPlayer.Stop();
         }
         currentPlayer = urlPlayers[_videoName];
         currentPlayer.Play(OnReachEndHandler,loop, StartTime, InEndTime);
-        currentPlayer.Render2Texture(renderTexture);
+        renderTexture = currentPlayer.RenderTexture;
+        this.BroadcastMessage("OnPlayByUrl",currentPlayer,SendMessageOptions.DontRequireReceiver);
     }
 
-    public void Pause()
+    public void Pause(bool Reset=false)
     {
         if(currentPlayer==null) return;
         if(currentPlayer.isPlaying)
             currentPlayer.Pause();
+    }
+
+    public void Stop(){
+        if(currentPlayer==null) return;
+        currentPlayer.Stop();
     }
     //public string[] urls = null;
     // Start is called before the first frame update

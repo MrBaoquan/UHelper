@@ -59,6 +59,24 @@ public class UVideoPlayer : MonoBehaviour
     private VideoPlayer videoPlayer = null;
     private RawImage videoImage = null;
 
+    private RenderTexture renderTexture = null;
+    public RenderTexture RenderTexture{
+        get{
+            return renderTexture;
+        }
+    }
+
+    public RenderTexture BuildRenderTexture(int InWidth, int InHeight, int InDepth=0, RenderTextureFormat InFormat=RenderTextureFormat.ARGB32){
+        renderTexture = new RenderTexture(InWidth, InHeight, InDepth, InFormat);
+        return renderTexture;
+    }
+
+    public void Render2Texture()
+    {
+        if(renderTexture==null) return;
+        Render2Texture(renderTexture);
+    }
+
     public void Render2Texture(RenderTexture InTexture = null)
     {
         videoPlayer.renderMode = VideoRenderMode.RenderTexture;
@@ -343,11 +361,15 @@ public class UVideoPlayer : MonoBehaviour
         }
     }
 
-    public void Stop()
+    public void Stop(bool bFullyStop=false)
     {
-        if(videoPlayer!=null){
+        if(videoPlayer == null) return;
+
+        if(bFullyStop){
             videoPlayer.Stop();
             videoPlayer.time = 0f;
+        }else{
+            SeekTo(0,_=>{});
         }
     }
 

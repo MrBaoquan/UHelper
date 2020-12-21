@@ -31,9 +31,7 @@ public class UHelperEntry : SingletonBehaviour<UHelperEntry>
         _utilGO.transform.parent = this.transform;
         _utilGO.AddComponent(typeof(MonobehaviourUtil));
 
-#if UNITY_EDITOR
         AssemblyConfig.Refresh();
-#endif
 
         // 1. 配置文件
         Managements.Config.Initialize();
