@@ -35,12 +35,13 @@ public class UTcpServer : USocket
     }
 
     public override void Dispose(){
+        base.Dispose();
         listenTaskHandler.Cancel();
-        destroySocket(socket);
         connections.Values.ToList()
             .ForEach(_socket=>{
                 destroySocket(_socket);
             });
+        destroySocket(socket);
     }
 
     public void Send2Client(byte[] InData, string InKey="")

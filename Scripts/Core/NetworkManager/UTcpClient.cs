@@ -90,6 +90,7 @@ public class UTcpClient : USocket
         }
         if(!bReuse){
             destroySocket(socket);
+            base.Dispose();
         }
         clientReuse = bReuse;
     }

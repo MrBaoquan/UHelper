@@ -72,10 +72,16 @@ public class UNetManager : Singleton<UNetManager>,Manageable
         return _socket;
     }
 
-    public void DisconnectTcpClient(string InKey){
+    public void CloseTcpClient(string InKey){
         if(!allTcpClients.ContainsKey(InKey)) return;
         allTcpClients[InKey].Disconnect();
         allTcpClients.Remove(InKey);
+    }
+
+    public void CloseTcpServer(string InKey){
+        if(!allTcpServers.ContainsKey(InKey)) return;
+        allTcpServers[InKey].Dispose();
+        allTcpServers.Remove(InKey);
     }
 
     public UTcpServer BuildTcpListener(string InLocalIP="127.0.0.1",int InLocalPort=6666, UNetMsgReceiver MessageReceiver=null)

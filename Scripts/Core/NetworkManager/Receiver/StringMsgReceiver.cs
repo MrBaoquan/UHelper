@@ -36,7 +36,6 @@ public class StringMsgReceiver : UNetMsgReceiver
                 try
                 {
                     bool _connected = !socket.Poll(0,SelectMode.SelectRead)&&socket.Available==0;
-                    UnityEngine.Debug.Log("listen........................");
                     if(!_connected){
                         recvHandler.Cancel();
                         fireDisconnectedEvent();
@@ -83,8 +82,11 @@ public class StringMsgReceiver : UNetMsgReceiver
 
     public override void Dispose(){
         base.Dispose();
-        recvHandler.Cancel();
-        recvHandler = null;
+        if(recvHandler!=null){
+            recvHandler.Cancel();
+            recvHandler = null;
+        }
+        
     }
 
 }
