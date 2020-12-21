@@ -40,7 +40,7 @@ public class UScrollView : MonoBehaviour
         rectTransform = this.GetComponent<RectTransform>();
 
         menuPoolRoot = new GameObject("scroll item pool");
-        menuPool = PoolManager.Pools.Create("MenuItemPool",menuPoolRoot);
+        menuPool = PoolManager.Pools.Create("MenuItem",menuPoolRoot);
         scrollRect = this.GetComponent<ScrollRect>();
         viewport = scrollRect.viewport;
         content = scrollRect.content;   

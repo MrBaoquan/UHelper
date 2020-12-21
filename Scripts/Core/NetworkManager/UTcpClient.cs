@@ -63,12 +63,18 @@ public class UTcpClient : USocket
     {
         if (socket == null || !Connected  || InData==null)
         {
+            UnityEngine.Debug.LogWarning("Send package failed");
             return 0;
         }
         try
         {
-            if(!socket.Connected) return 0;
-            return socket.Send(InData);    
+            if(!socket.Connected) {
+                UnityEngine.Debug.LogWarning("Socket not connect yet");
+                doDisconnect(true);
+                return 0;
+            }
+            
+            return socket.Send(InData);
         }
         catch (System.Exception e)
         {
@@ -115,7 +121,6 @@ public class UTcpClient : USocket
                 return false;
             }
         }).ObserveOnMainThread().Subscribe(_=>{
-            UnityEngine.Debug.LogFormat("connect result: {0}",_);
             if(!_) return;
             connected = true;
             Managements.Event.Fire(new UNetConnectedEvent{RemoteIP=remoteEndPoint.Address.ToString(), RemotePort = remoteEndPoint.Port});
