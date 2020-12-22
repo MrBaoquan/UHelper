@@ -101,12 +101,12 @@ public class AssemblyConfig : ScriptableObject
 
     public void Awake()
     {
-        Debug.Log("Awake");
+        
     }
 
     public void OnDestroy()
     {
-        Debug.Log("OnDestroy");
+        
     }
 
     public void LoadNewAssembly(string InAssemblyName)

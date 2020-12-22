@@ -12,6 +12,12 @@ namespace UHelper
 public class ConfigManager : Singleton<ConfigManager>
 {
     private Dictionary<string,UConfig> configs = new Dictionary<string, UConfig>();
+
+    private string ConfigRootDir{
+        get{
+            return Path.Combine(Directory.GetParent(Application.dataPath).FullName,"Configs");
+        }
+    }
     public void Initialize()
     {
         Type[] _configClasses =  AssemblyConfig.GetSubClasses(typeof(UConfig)).ToArray();// UReflection.SubClasses(typeof(UConfig));
@@ -20,7 +26,7 @@ public class ConfigManager : Singleton<ConfigManager>
         {
             UConfig _configInstance =  Activator.CreateInstance(_configClass) as UConfig;
 
-            string _configDir = Path.Combine(Application.streamingAssetsPath,"Configs");
+            string _configDir = ConfigRootDir;
             if(!Directory.Exists(_configDir)){
                 Directory.CreateDirectory(_configDir);
             }

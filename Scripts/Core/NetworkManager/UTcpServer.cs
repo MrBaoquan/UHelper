@@ -15,7 +15,6 @@ public class UTcpServer : USocket
 {
     private Socket socket;
     public UTcpServer(UNetMsgReceiver InMessageReceiver=null):base(NetProtocol.Tcp){
-        UnityEngine.Debug.Log("初始化 socket");
         socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         SetReceiver(InMessageReceiver);
     }

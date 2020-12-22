@@ -1,7 +1,8 @@
 {
     "name": "UHelper",
     "references": [
-        "GUID:560b04d1a97f54a4e82edc0cbbb69285"
+        "GUID:560b04d1a97f54a4e82edc0cbbb69285",
+        "GUID:796cbadcd939cb5409c03b5946a75b62"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
