@@ -102,6 +102,8 @@ public class UVideoPlayer : MonoBehaviour
         InMaterial.SetTexture("_MainTex",videoPlayer.targetTexture);
     }
 
+
+    List<IDisposable> timerHandlers = new List<IDisposable>();
     public void Render2Material(Renderer InRenderer=null){
         videoPlayer.renderMode = VideoRenderMode.MaterialOverride;
         if(InRenderer==null){
@@ -144,7 +146,22 @@ public class UVideoPlayer : MonoBehaviour
     }
 
     private VideoPlayer.EventHandler vpReachEnd = null;
+    private void clearVPReachEnd()
+    {
+        if(vpReachEnd!=null){
+            videoPlayer.loopPointReached -= vpReachEnd;
+            vpReachEnd = null;
+        }
+    }
+
     private IDisposable vpLoopTimer = null;
+    private void clearVPLoopTimer()
+    {
+        if(vpLoopTimer!=null){
+            vpLoopTimer.Dispose();
+            vpLoopTimer = null;
+        }
+    }
 
     /**
      *  loop -1 根据Looping属性决定 0 不循环   1循环
@@ -209,15 +226,8 @@ public class UVideoPlayer : MonoBehaviour
             _endTime = videoPlayer.length;
         }
         //Debug.LogFormat("UVP:Play [{0} - {1}]",_startTime, _endTime);
-        if(vpReachEnd!=null){
-            videoPlayer.loopPointReached -= vpReachEnd;
-            vpReachEnd = null;
-        }
-
-        if(vpLoopTimer!=null){
-            vpLoopTimer.Dispose();
-            vpLoopTimer = null;
-        }
+        clearVPReachEnd();
+        clearVPLoopTimer();
 
         vpReachEnd = _=>{
                 _bSeekCompleted = false;
@@ -232,11 +242,8 @@ public class UVideoPlayer : MonoBehaviour
                     if(videoPlayer.isPlaying){
                         videoPlayer.Pause();    
                     }
-                    videoPlayer.loopPointReached -= vpReachEnd;
-                    if(vpLoopTimer!=null){
-                        vpLoopTimer.Dispose();
-                        vpLoopTimer = null;
-                    }
+                    clearVPReachEnd();
+                    clearVPLoopTimer();
                 }
         };
 
@@ -287,20 +294,26 @@ public class UVideoPlayer : MonoBehaviour
         videoPlayer.Prepare();
     }
     private VideoPlayer.EventHandler vpSeekCompleted = null;
+    private void clearSeekCompltedHandler(){
+        if(vpSeekCompleted!=null){
+            videoPlayer.seekCompleted -= vpSeekCompleted;
+            vpSeekCompleted = null;
+        }
+    }
     private IDisposable vpSeekTimer = null;
+    private void clearSeekTimer(){
+        if(vpSeekTimer!=null){
+            vpSeekTimer.Dispose();
+            vpSeekTimer = null;
+        }
+    }
     private bool timeGreaterThan(double InTime){
         return videoPlayer.time>=InTime;
     }
     public void SeekTo(double InTime, VideoPlayer.EventHandler InSeekedHandler=null, VideoPlayer.EventHandler InTimeReadyHandler=null, bool AutoPlay=false)
     {
-        if(vpSeekCompleted!=null){
-            videoPlayer.seekCompleted -= vpSeekCompleted;
-            vpSeekCompleted = null;
-        }
-
-        if(vpSeekTimer!=null){
-            vpSeekTimer.Dispose();
-        }
+        clearSeekCompltedHandler();
+        clearSeekTimer();
 
         double _originDelta = videoPlayer.time - InTime;
         Func<long,bool> _condition = _2=>{
@@ -321,19 +334,15 @@ public class UVideoPlayer : MonoBehaviour
         Debug.LogFormat("UVP_{0}:========= start seek ",UnityEngine.Time.time, UnityEngine.Time.time - _originGameTime);
         vpSeekCompleted = _=>{
             Debug.LogFormat("UVP_{0}:=========Seek complted delta 1: {1}",UnityEngine.Time.time, UnityEngine.Time.time - _originGameTime);
-            Debug.LogFormat("UVP_Current:{0}", videoPlayer.time);
-            videoPlayer.seekCompleted -= vpSeekCompleted;
-            vpSeekCompleted = null;
-            
+            clearSeekCompltedHandler();
             videoPlayer.SetDirectAudioMute(0, false);
             if(InSeekedHandler != null){
                 InSeekedHandler(videoPlayer);
             }
 
-            Observable.EveryUpdate().Where(_condition).First().Subscribe(_11=>{
+            vpSeekTimer = Observable.EveryUpdate().Where(_condition).First().Subscribe(_11=>{
                 Debug.LogFormat("UVP_{0}:=========Seek complted delta 2: {1}",UnityEngine.Time.time, UnityEngine.Time.time - _originGameTime);
-                Debug.LogFormat("UVP_Current:{0}", videoPlayer.time);
-
+                clearSeekTimer();
                 if(videoPlayer.isPlaying&&!AutoPlay){
                     videoPlayer.Pause();
                 }
@@ -363,8 +372,11 @@ public class UVideoPlayer : MonoBehaviour
 
     public void Stop(bool bFullyStop=false)
     {
+        clearSeekCompltedHandler();
+        clearSeekTimer();
+        clearVPLoopTimer();
+        clearVPReachEnd();
         if(videoPlayer == null) return;
-
         if(bFullyStop){
             videoPlayer.Stop();
             videoPlayer.time = 0f;
