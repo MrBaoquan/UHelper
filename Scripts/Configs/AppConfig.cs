@@ -15,7 +15,6 @@ namespace UHelper
 
         [XmlAttribute()]
         public UFullScreenMode Mode = UFullScreenMode.ExclusiveFullScreen;
-
     }
 
     public class AppConfig : UConfig

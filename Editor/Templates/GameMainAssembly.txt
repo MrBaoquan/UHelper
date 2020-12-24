@@ -1,7 +1,8 @@
 {
     "name": "GameMain",
     "references": [
-        "GUID:f5880b1b680bf1643b407bffbb50a990"
+        "GUID:f5880b1b680bf1643b407bffbb50a990",
+        "GUID:796cbadcd939cb5409c03b5946a75b62"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

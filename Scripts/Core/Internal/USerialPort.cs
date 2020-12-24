@@ -1,3 +1,4 @@
+using System.Text;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -96,6 +97,7 @@ public class USerialPort
             Debug.LogWarning("serial port has not opened yet.");
             return;
         }
+        Debug.LogFormat("write:{0}",Encoding.ASCII.GetString(InData));
         serialPort.Write(InData,0, InData.Length);
     }
 

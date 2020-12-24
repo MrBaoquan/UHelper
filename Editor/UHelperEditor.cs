@@ -22,7 +22,7 @@ public class UHelperEditor : Editor
     }
 
     private static void NewSceneCreatedCallback(Scene scene, NewSceneSetup setup, NewSceneMode mode){
-        Debug.LogFormat("new scene created {0}",scene.name);
+        
     }
 
     private static void SceneSaved(Scene scene){

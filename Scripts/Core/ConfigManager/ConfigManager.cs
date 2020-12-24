@@ -13,11 +13,7 @@ public class ConfigManager : Singleton<ConfigManager>
 {
     private Dictionary<string,UConfig> configs = new Dictionary<string, UConfig>();
 
-    private string ConfigRootDir{
-        get{
-            return Path.Combine(Directory.GetParent(Application.dataPath).FullName,"Configs");
-        }
-    }
+    private const string configDir = "Configs";
     public void Initialize()
     {
         Type[] _configClasses =  AssemblyConfig.GetSubClasses(typeof(UConfig)).ToArray();// UReflection.SubClasses(typeof(UConfig));
@@ -25,8 +21,18 @@ public class ConfigManager : Singleton<ConfigManager>
         foreach (var _configClass in _configClasses)
         {
             UConfig _configInstance =  Activator.CreateInstance(_configClass) as UConfig;
+            string _configDir = Path.Combine(Application.persistentDataPath, configDir);
 
-            string _configDir = ConfigRootDir;
+            var _attributes = Attribute.GetCustomAttributes(_configClass);
+            var _attribute = _attributes.Where(_attr=>_attr is SerializedAt).First();
+            
+            if(_attribute!=null){
+                var _saveTo = (_attribute as SerializedAt).SaveTo;
+                if(_saveTo==UAppPath.StreamingDir){
+                    _configDir = Path.Combine(Application.streamingAssetsPath, configDir);
+                }
+            }
+
             if(!Directory.Exists(_configDir)){
                 Directory.CreateDirectory(_configDir);
             }

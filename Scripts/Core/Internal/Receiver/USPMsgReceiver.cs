@@ -8,7 +8,6 @@ namespace UHelper{
 
 public abstract class USPMsgReceiver
 {
-
     protected SerialPort serialPort = null;
     private Queue<SPMessage> messages = null;
     public void Prepare(SerialPort InSerialPort, Queue<SPMessage> InMessages){
@@ -16,7 +15,6 @@ public abstract class USPMsgReceiver
         messages = InMessages;
         OnConnected();
     }
-
 
     CancellationTokenSource cancellationToken = null;
     Task flushTask = null;
