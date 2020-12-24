@@ -201,10 +201,20 @@ public class UScrollView : MonoBehaviour
     public Action<RectTransform> OnRetarget = null;
     void Start()
     {
+        IDisposable _stopHandler = null;
         scrollRect.OnEndDragAsObservable().Subscribe(_=>{
-            var _rectTransform = ClosetCenterItem() as RectTransform;
 
-            ScrollTo(_rectTransform.GetSiblingIndex());
+            if(_stopHandler!=null) _stopHandler.Dispose();
+            _stopHandler = Observable.EveryUpdate().Where(_1=>Mathf.Abs(scrollRect.velocity.x)<=1000f).Subscribe(_2=>{
+                var _rectTransform = ClosetCenterItem() as RectTransform;
+                ScrollTo(_rectTransform.GetSiblingIndex());
+                _stopHandler.Dispose();
+                _stopHandler = null;
+            });
+            
+            
+
+            
             // float _normalizedPosition = scrollRect.GetItemNormallizedPosition(_rectTransform);
 
             // DOTween.To(()=>scrollRect.horizontalNormalizedPosition,_2=>{
