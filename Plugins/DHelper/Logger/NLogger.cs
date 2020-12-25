@@ -1,32 +1,29 @@
 using System.IO;
-using UnityEngine;
 using System;
-using System.Linq;
 using NLog;
+
 
 namespace UHelper
 {
     
-public static class ULogger
+
+public static class NLogger
 {
     const string configName = "NLog.config.xml";
     const string logFileName = "${shortdate}.log";
-    
-    static string LogFileDir{
-        get{
-            return Path.Combine(Directory.GetParent(Application.dataPath).FullName,"Logs");
-        }
+
+    private static string logFileDir = string.Empty;
+    public static string LogFileDir{
+        get{return logFileDir;}
+        set{logFileDir=value;}
     }
     static string LogFilePath {
         get{
             return Path.Combine(LogFileDir, logFileName);
         }
     }
-    static string configPath{
-        get{
-            return Path.Combine(Directory.GetParent(Application.dataPath).FullName,configName);
-        }
-    }
+
+    static NLogger(){}
 
     private static NLog.Logger _logger = null;
     private static NLog.Logger logger {
@@ -38,31 +35,35 @@ public static class ULogger
         }
     }
 
+
+    public static void Debug(object InMessage){
+        logger.Debug(InMessage);
+    }
+    
     public static void Debug(string InMessage){   
-#if UNITY_EDITOR
-        UnityEngine.Debug.Log(InMessage);
-#endif
         logger.Debug(InMessage);
     }
 
-    public static void Warning(string InMessage){   
-#if UNITY_EDITOR
-        UnityEngine.Debug.LogWarning(InMessage);
-#endif
-        logger.Warn(InMessage);
+    public static void Debug(string InFormat, params object[] InParams){
+        logger.Debug(InFormat,InParams);
     }
 
-    public static void Error(string InMessage){   
-#if UNITY_EDITOR
-        UnityEngine.Debug.LogError(InMessage);
-#endif
+    public static void Warn(string InMessage){
+        logger.Warn(InMessage);
+    }
+    public static void Warn(string InFormat, params object[] InParams){
+        logger.Warn(InFormat, InParams);
+    }
+
+    public static void Error(string InMessage){
         logger.Error(InMessage);
     }
 
-    public static void Error(Exception InEx, string InMessage=""){   
-#if UNITY_EDITOR
-        UnityEngine.Debug.LogError(InMessage);
-#endif
+    public static void Error(string InFormat, params object[] InParams){
+        logger.Error(InFormat, InParams);
+    }
+
+    public static void Error(Exception InEx, string InMessage=""){
         logger.Error(InEx, InMessage);
     }
 
@@ -86,7 +87,10 @@ public static class ULogger
         NLog.LogManager.Shutdown();
     }
 
+
+
 }
+
 
 
 }
