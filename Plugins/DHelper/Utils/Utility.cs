@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace UHelper
@@ -5,6 +6,18 @@ namespace UHelper
     
 public static class Utility
 {
+    public static void CallFunction(Delegate InDelegate, params object[] Params)
+    {
+        if(InDelegate!=null)
+            InDelegate.DynamicInvoke(Params);
+    }
+
+    public static void Dispose(ref IDisposable Target){
+        if(Target!=null){
+            Target.Dispose();
+            Target = null;
+        }
+    }
 
     public static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
     {

@@ -37,12 +37,13 @@ public class TestDHelper
     
     public static void Test()
     {
-        NLogger.Debug("current thread id: " +Thread.CurrentThread.ManagedThreadId);
-        (new TestObservable())
-        .Subscribe(Observer.Create<int>(_=>{
-            NLogger.Debug("thread id: " +Thread.CurrentThread.ManagedThreadId);
-            NLogger.Debug(_);
-        }));
+        // NLogger.Debug("current thread id: " +Thread.CurrentThread.ManagedThreadId);
+        // (new TestObservable())
+        // .ObserveOn(Scheduler.CurrentThread)
+        // .Subscribe(Observer.Create<int>(_=>{
+        //     NLogger.Debug("thread id: " +Thread.CurrentThread.ManagedThreadId);
+        //     NLogger.Debug(_);
+        // }));
         //Observable.Subscribe(Observable.Create<int>(_=>{return Disposable.Empty;}));
 
     }

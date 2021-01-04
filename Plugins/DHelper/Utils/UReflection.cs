@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System;
-using UnityEngine;
 
 namespace UHelper
 {
@@ -37,8 +36,38 @@ public static class UReflection
         }
         catch(Exception exc)
         {
-            Debug.LogError(exc.Message);
+            NLogger.Error(exc.Message);
             return false;
+        }
+    }
+
+    public static void SetPrivateField<T>(object InTarget, string InField, T Value)
+    {
+        try
+        {
+            Type _class = InTarget.GetType();
+            FieldInfo _fieldInfo = _class.GetField(InField,BindingFlags.NonPublic | BindingFlags.Instance);
+            object _safeValue = Convert.ChangeType(Value,_fieldInfo.FieldType);
+            _fieldInfo.SetValue(InTarget, _safeValue);
+        }
+        catch (System.Exception ex)
+        {
+            NLogger.Error(ex);
+        }
+    }
+
+    public static void CallPrivateMethod(object InTarget, string InMethodName, params object[] InParams)
+    {
+        try
+        {
+            var _methodInfo = InTarget.GetType()
+                .GetMethod(InMethodName, BindingFlags.NonPublic | BindingFlags.Instance);
+            _methodInfo.Invoke(InTarget, InParams);
+        }
+        catch (System.Exception ex)
+        {
+            NLogger.Warn(InMethodName);
+            NLogger.Error(ex);
         }
     }
 
