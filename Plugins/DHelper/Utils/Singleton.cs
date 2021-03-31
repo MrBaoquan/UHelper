@@ -14,7 +14,7 @@ using System.Collections.Generic;
  * Copyright 2019 - 2019 mrma617@gmail.com
  */
 
-namespace UHelper
+namespace UNIHper
 {
     public class Singleton<T> where T : new()
     {

@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace UHelper {
+namespace UNIHper {
 
     public class WinAPI {
 
